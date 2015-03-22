@@ -16,7 +16,10 @@
 #	5. Functional analysis 
 
 #### step 1. Normalize data
-
+#mkdir -p raw
+#mkdir output map base
+#cp names.txt $2/
+#R --no-save --args $1 $2 $3 < normalizeAgilent.R 1> output 2>errors
 
 #### step 2. Find differentially expressed genes 
 # run differential expression analysis with siggenes
@@ -77,7 +80,7 @@ while read G; do
     echo "group $G has no representation in data. Group illdefined in the input file?"
   fi
 done < generics.txt
-rm -f generics.txt Reactome.out Reactome.err getN.out getN.err map.out map.err
+rm -f Reactome.out Reactome.err getN.out getN.err map.out map.err
 
 #group of ungrouped
 sort -u genes_t > ingroup_g.txt
@@ -88,7 +91,6 @@ grep -w -v -f ingroup_g.txt $1 > transcriptomics_ungrouped.txt
 
 #### step 4. Test associations within groups
 
-#STATISTICS
 # CCA
 # Apply only for large number of observations 
 # e.g. 5 diets, two genotypes, 4 samples = 40 observations
