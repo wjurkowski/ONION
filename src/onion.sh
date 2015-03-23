@@ -8,27 +8,16 @@
 #var3 - lipids IDs mapping
 #var4 - db to map genes: hgnc, ensp, entrez, refseq
 
-#	STEPS
+#	REQUIREMENTS
 #	1. Normalize data
 #	2. Find differentially expressed genes
-#	3. Create subgroups of genes and lipids
-#	4. Test associations within groups
-#	5. Functional analysis 
 
-#### step 1. Normalize data
-#mkdir -p raw
-#mkdir output map base
-#cp names.txt $2/
-#R --no-save --args $1 $2 $3 < normalizeAgilent.R 1> output 2>errors
+#	STEPS
+#	1. Create subgroups of genes and lipids
+#	2. Test associations within groups
+#	3. Functional analysis (optional)
 
-#### step 2. Find differentially expressed genes 
-# run differential expression analysis with siggenes
-R --no-save --args trans.txt lipid.txt < SAM.R > output
-
-# Important metabolites. 
-# Provide data of detected metabolites 
-
-#### step 3. Create subgroups of lipids and genes
+#### step 1. Create subgroups of lipids and genes
 #Build network comprising known molecular pathways and putative interactions from highthroughput experiments
 #associate genes with lipids. Use generic lipid names to match them with reactome
 
@@ -89,7 +78,7 @@ rm -f genes_t lipids_t
 grep -w -v -f ingroup_l.txt $2 > lipidomics_ungrouped.txt
 grep -w -v -f ingroup_g.txt $1 > transcriptomics_ungrouped.txt
 
-#### step 4. Test associations within groups
+#### step 2. Test associations within groups
 
 # CCA
 # Apply only for large number of observations 
@@ -127,8 +116,7 @@ done < generics.txt
 rm -f out1 out2 out3 out4 err1 err2 err3 err4
 
 
-
-#### step 5. Functional analysis
+#### step 3. Functional analysis
 #GO enrichment in groups
 #while read gr; do
 #	R --no-save --args temp/$gr /projects/integromika/data/annotations/gene2go < letsGO.R 1> output 2>error
