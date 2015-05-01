@@ -1,6 +1,6 @@
 # README #
 
-### ONION ###
+### Summary ###
 
 ONION stands for Omics data Integration On molecular Networks. We are developing approaches to interpret data from multiple experiments generating genomics, transcriptomics and metabolomics data
  
