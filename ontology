@@ -1,7 +1,7 @@
 library(rJava)
 library(ontoCAT)
 
-CHEBI <- getOntology("ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi.owl")
+CHEBI <- getOntology("C:/Users/Ewka/Documents/onto.owl")
 
 # Creating a list of ChEBI IDs that we are looking for (in the end it will be loaded from file, not created like this).
 # "ids" is just an example. Then creating functions for searching for parents/children of any ChEBI compound, 
