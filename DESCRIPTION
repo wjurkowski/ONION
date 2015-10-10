@@ -8,6 +8,6 @@ Maintainer: Cezary Turek <cezary.turek@gmail.com>
 Description: Packacge description, what ONION does.
 License: GNU GPL
 LazyData: TRUE
-Imports: biomaRt, igraph, pls, stats, corrplot, yacca, FRCC, STRINGdb, RCurl, BiocCheck, testthat
-Depends:
-Suggests: testthat
+Imports: biomaRt, igraph, pls, stats, corrplot, yacca, FRCC, STRINGdb, RCurl, BiocCheck, testthat, httr
+Depends: RCurl, RJSONIO
+Suggests: RCurl, testthat, RJSONIO

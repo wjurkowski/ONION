@@ -10,6 +10,8 @@ import(STRINGdb)
 import(RCurl)
 import(BiocCheck)
 import(testthat)
+import(httr)
+import(RJSONIO)
 #Use importFrom, will remove warnings.
 export(mapReactome)
 #Fill it in future.
