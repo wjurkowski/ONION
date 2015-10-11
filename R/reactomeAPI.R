@@ -55,8 +55,11 @@ queryHitPathways <- function() {
     #body="PPP2R1A,CEP192,AKAP9,CENPJ,CEP290,DYNC1H1"
 }
 
-pathwaysForEntities <- function() {
-    #TODO It is more sophisticated case.
+#TODO It works only with one ID, but it should work with few coma separated.
+pathwaysForEntitie <- function(physicalEntityDatabaseId) {
+    url <- paste("http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/pathwaysForEntities")
+    response <- postForm(url, ID=physicalEntityDatabaseIds, style = "POST", .opts = list(httpheader = c('Content-Type' = 'text/plain')))
+    pathwaysList <- fromJSON(response[[1]])
 }
 
 queryReviewedPathways <- function(personId) {
@@ -84,13 +87,24 @@ sbmlExporter <- function(eventId) {
 getReferenceMolecules <- function() {
     response <- getForm("http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/getReferenceMolecules",
                         .opts = list(httpheader = c('Content-Type' = 'application/json')))
-    #TODO Split it to list or data.frame.
+    referenceMolecules <- stringResponseBodyToDataFrame(response[[1]], "\t", "reactomeId", "chebiId")
 }
 
 getDiseases <- function() {
-    #TODO Implement.
+    response <- getForm("http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/getDiseases",
+                        .opts = list(httpheader = c('Content-Type' = 'application/json')))
+    diseases <- stringResponseBodyToDataFrame(response[[1]], "\t", "rectomeId", "diseaseOntologyId")
 }
 
 getUniProtRefSeqs <- function() {
-    #TODO Implement and cast from table.
+    response <- getForm("http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/getUniProtRefSeqs",
+                        .opts = list(httpheader = c('Content-Type' = 'application/json')))
+    uniProtRefSeqs <- stringResponseBodyToDataFrame(response[[1]], "\t", "reactomeId", "uniprotId")
+}
+
+#private methods
+stringResponseBodyToDataFrame <- function(stringResponseBody, sep = "\t", ...) {
+    responseConnection <- textConnection(stringResponseBody)
+    dataFrame <- read.table(responseConnection, sep=sep, col.names=c(...),
+                                fill=FALSE, strip.white=TRUE)
 }
