@@ -2,28 +2,22 @@ library(rJava)
 library(ontoCAT)
 
 CHEBI <- getOntology("C:/Users/Ewka/Documents/onto.owl")
+ids <- list("CHEBI_90")
 
-# Creating a list of ChEBI IDs that we are looking for (in the end it will be loaded from file, not created like this).
-# "ids" is just an example. Then creating functions for searching for parents/children of any ChEBI compound, 
-# "CHEBI_number" complete with quotation marks as "x". This will return a list of paretnts/children with their
-# ChEBI ID and names. 
+# szukanie rodziców i dzieci
 
-ids <- list(nr90="CHEBI_90", nr1148="CHEBI_1148", nr1895="CHEBI-_1895")
-parents <- function(x) {
-	  getAllTermParentsById(CHEBI, x)
+for (x in ids) {
+	# cat(paste("dla numeru", x))
+	y <- getAllTermParentsById(CHEBI, x)
+	print(y)
 }
-lapply(ids, parents)
-
-children <- function(x) {
-	   getAllTermChildrenById(CHEBI, x)
+for (x in ids) {
+	# cat(paste("dla numeru", x))
+	z <- getAllTermChildrenById(CHEBI, x)
+	print(z)
 }
-lapply(ids, children)
 
-# Here should be function for extracting only ChEBI numbers from previous output and making list of it, but 
-# I don't have idea how to do that. In the future with multiple ChEBI IDs it can be done with lapply and 
-# pathway function. But for now it will be like this: loading .csv file with two columns, number one
-# "ChEBI" with only numbers and number two with Reactome pathways that correspond with them. Here "x" is just a ChEBI
-# number that we are looking for in this file.  
+# szuaknie w bazie Reactome
 
 reactome <- read.csv("Reactome.csv", header=TRUE)
 pathway <- function(x) {
