@@ -58,7 +58,7 @@ queryHitPathways <- function() {
 #TODO It works only with one ID, but it should work with few coma separated.
 pathwaysForEntitie <- function(physicalEntityDatabaseId) {
     url <- paste("http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/pathwaysForEntities")
-    response <- postForm(url, ID=physicalEntityDatabaseIds, style = "POST", .opts = list(httpheader = c('Content-Type' = 'text/plain')))
+    response <- postForm(url, "ID"=physicalEntityDatabaseId, style = "POST", .opts = list(httpheader = c('Content-Type' = 'application/json')))
     pathwaysList <- fromJSON(response[[1]])
 }
 
@@ -100,6 +100,20 @@ getUniProtRefSeqs <- function() {
     response <- getForm("http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/getUniProtRefSeqs",
                         .opts = list(httpheader = c('Content-Type' = 'application/json')))
     uniProtRefSeqs <- stringResponseBodyToDataFrame(response[[1]], "\t", "reactomeId", "uniprotId")
+}
+
+#GlobalForPerformance
+chEBIToReactomeLowestLevel <- read.table("resources/ChEBI2Reactome.txt")
+#Additional (local) API methods
+checkIfPathwayIdExistsForChEBIId <- function(ChEBIId) {
+    #chEBIToReactomeLowestLevel <- read.table("resources/ChEBI2Reactome.txt")
+    #chEBIToReactomeLowestLevel[chEBIToReactomeLowestLevel$V1=="28842",]
+    matchingChEBIToReactome <- chEBIToReactomeLowestLevel[grep(ChEBIId, chEBIToReactomeLowestLevel$V1),]
+    if (nrow(matchingChEBIToReactome)) {
+        TRUE
+    } else {
+        FALSE
+    }
 }
 
 #private methods

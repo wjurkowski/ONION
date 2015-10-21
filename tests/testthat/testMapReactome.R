@@ -5,11 +5,11 @@ print(getwd())
 
 source("../R/mapReactome.R", chdir = TRUE)
 
-test_that("mepReactome test", {
+test_that("clusterSmallMolecules test", {
     #given
 
     #whene
-    mr <- mapReactome()
+    mr <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")()
 
     #then
     expect_that( mr, is_a("data.frame") )

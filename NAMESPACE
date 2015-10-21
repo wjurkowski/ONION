@@ -14,6 +14,7 @@ import(httr)
 import(RJSONIO)
 #Use importFrom, will remove warnings.
 export(mapReactome)
+export(clusterSmallMolecules)
 #Fill it in future.
 exportClasses()
 exportMethods()

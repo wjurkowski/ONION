@@ -1,7 +1,7 @@
 library(RCurl)
 library(XML)
 
-getChEBIIdsListOfOntologyParents <- function(ChEBIId) {
+getListOfChEBIIdsOfOntologyParents <- function(ChEBIId) {
     headerFields = c(Accept = "text/xml", Accept = "multipart/*", 'Content-Type' = "text/xml; charset=utf-8", SOAPAction = "")
     body = paste0('<soapenv:Envelope
                 xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
