@@ -1,10 +1,13 @@
+# solution for "java out of space" problem
+options(java.parameters = " - Xmx1024m")
+
 library(rJava)
 library(ontoCAT)
 
 CHEBI <- getOntology("C:/Users/Ewka/Documents/onto.owl")
 ids <- list("CHEBI_90")
 
-# szukanie rodziców i dzieci
+# searching for parents and children
 
 for (x in ids) {
 	# cat(paste("dla numeru", x))
@@ -17,7 +20,7 @@ for (x in ids) {
 	print(z)
 }
 
-# szuaknie w bazie Reactome
+# searching in Reactome 
 
 reactome <- read.csv("Reactome.csv", header=TRUE)
 pathway <- function(x) {
