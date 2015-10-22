@@ -1,25 +1,7 @@
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Build and Reload Package:  'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
+source("R/reactomeAPI.R")
+source("R/chebiAPI.R")
 
-#TODO what arguments? What is the true input? How compicated should be filtering?
-mapReactome <- function() {
-    (nmLipidomics <- read.table("C:/HOME/ONIONpackage/ONION/R/nm-lipidomics.txt",header=TRUE))
-    (chebi <- nmLipidomics[1])
-    (chebiFiltered <- chebi["ChEBI"])
-    (chebiFiltered <- chebi[chebi$ChEBI > 20000 & chebi$ChEBI < 30000,])
-    chebiFiltered <- as.data.frame(chebiFiltered)
-    colnames(chebiFiltered) <- c("ChEBI")
-    chebiFiltered
-}
-
-#TODO Reactome API.
-mapReactome()
-
-
-#Original pseudo code API:
+#Original pseudo code API (OPCAPI):
 #
 #data.frame clusterSmallMolecules( file ) {
 #    //file - nm-lipidomics.txt (tylko male czasteczki)
@@ -31,14 +13,9 @@ mapReactome()
 #    //output - fa_mapping.txt (dzieci, rodzice) w ID z Chebi i chebi parent by ontology
 #}
 
-source("R/reactomeAPI.R")
-source("R/chebiAPI.R")
-
 clusterSmallMolecules <- function(pathToFile, header=TRUE) {
     smallMolecules <- read.table(pathToFile,header)
     smallMoleculesParents <- lapply(as.list(smallMolecules$ChEBI), function(listElement) {
-        #strsplit(listElement$chebiId[1], ":")[[1]][2]
-
         if (checkIfPathwayIdExistsForChEBIId(listElement)) {
             listElement
         } else {
@@ -61,3 +38,37 @@ clusterSmallMolecules <- function(pathToFile, header=TRUE) {
 #Go to chebi, and find at least good identifier in ontology.
 #Go to http://www.reactome.org/download/current/ChEBI2Reactome.txt and get Pathways Ids related to CHebi.
 #http://www.reactome.org/cgi-bin/instancebrowser?DB=gk_current&ID=6816043&  -  here you can obtain Genes, Chebis and etc.
+
+
+#OPCAPI:
+#
+#list[list] mapReactomePathways <- function ( data.frame fa_mapping.txt, ) {
+#    //input - fa_mapping.txt
+#    //all mapReactome.R file
+#    //MY: Find not duplicated PAthways
+#    //TODO: find Gens.
+#    //smallMolecules[Genes], NOW:smallMolecules[Pathways]
+#    //output genesSymbolList smallMolecules[Genes] K[x1...xn]
+#}
+
+mapReactomePathways <- function(chEBIToParentsIdDataFrame) {
+    parentIdsList <- as.list(as.vector(chEBIToParentsIdDataFrame$bestChEBIParents))
+    parentIdsToPathways <- lapply(parentIdsList, function(listElement) {
+        if (listElement != "NA") {
+            listOfUsablePathwaysIds <- getUsablePathwaysIdsForChEBI(listElement)
+        } else {
+            NA
+        }
+    })
+    parentIdsToPathways
+#    TODO: Map PAthways to Genes. But how?
+#    15378	R-ATH-211976	http://www.reactome.org/PathwayBrowser/#R-ATH-211976
+#    Endogenous sterols	IEA	Arabidopsis thaliana
+#    AT1G17060.1	R-ATH-211976	http://www.reactome.org/PathwayBrowser/#R-ATH-211976
+#    Endogenous sterols	IEA	Arabidopsis thaliana
+
+#    candidateSet 2975806 //Reactome - Set
+#    entityWithAccessionedSequence 193137 //ENSEMBL, UniProt - Protein
+#    simpleEntity 113533 //ChEBI - Chemical Compound
+#    complex 5580259 //Reactome - Complex
+}

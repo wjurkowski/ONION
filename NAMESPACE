@@ -13,8 +13,8 @@ import(testthat)
 import(httr)
 import(RJSONIO)
 #Use importFrom, will remove warnings.
-export(mapReactome)
 export(clusterSmallMolecules)
+export(mapReactomePathways)
 #Fill it in future.
 exportClasses()
 exportMethods()

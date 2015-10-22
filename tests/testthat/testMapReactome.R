@@ -9,8 +9,18 @@ test_that("clusterSmallMolecules test", {
     #given
 
     #whene
-    mr <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")()
+    mr <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
 
     #then
     expect_that( mr, is_a("data.frame") )
+})
+
+test_that("mapReactomePathways test", {
+    #given
+    smallMolecules <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
+
+    #whene
+    mr <- mapReactomePathways(smallMolecules)
+    #then
+    expect_that( mr, is_a("list") )
 })

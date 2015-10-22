@@ -116,6 +116,27 @@ checkIfPathwayIdExistsForChEBIId <- function(ChEBIId) {
     }
 }
 
+getPathwaysIdsForChEBI <- function(ChEBIId) {
+    matchingChEBIToReactome <- chEBIToReactomeLowestLevel[grep(ChEBIId, chEBIToReactomeLowestLevel$V1),]
+    as.list(as.character(matchingChEBIToReactome$V2))
+}
+
+getUsablePathwaysIdsForChEBI <- function(ChEBIId) {
+    dirtyListOfPathwaysIds <- getPathwaysIdsForChEBI(ChEBIId)
+    clearListOfPathwaysIds <- lapply(dirtyListOfPathwaysIds, function(listElement) {
+        strsplit(listElement, "-")[[1]][3]
+    })
+    clearListOfPathwaysIds
+    duplicationsInClearList <- as.list(duplicated(clearListOfPathwaysIds, incomparables = FALSE))
+    noDuplicationVector <- list()
+    for(i in 1:length(duplicationsInClearList)) {
+        if (!duplicationsInClearList[[i]]) {
+            noDuplicationVector <- c(noDuplicationVector, clearListOfPathwaysIds[i])
+        }
+    }
+    noDuplicationVector
+}
+
 #private methods
 stringResponseBodyToDataFrame <- function(stringResponseBody, sep = "\t", ...) {
     responseConnection <- textConnection(stringResponseBody)
