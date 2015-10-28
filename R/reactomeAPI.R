@@ -104,6 +104,9 @@ getUniProtRefSeqs <- function() {
 
 #GlobalForPerformance
 chEBIToReactomeLowestLevel <- read.table("resources/ChEBI2Reactome.txt")
+Ensembl2ReactomeLowestLevel <- read.table("resources/Ensembl2Reactome.txt")
+UniProt2ReactomeLowestLevel <- read.table("resources/UniProt2Reactome.txt")
+
 #Additional (local) API methods
 checkIfPathwayIdExistsForChEBIId <- function(ChEBIId) {
     #chEBIToReactomeLowestLevel <- read.table("resources/ChEBI2Reactome.txt")
@@ -116,25 +119,63 @@ checkIfPathwayIdExistsForChEBIId <- function(ChEBIId) {
     }
 }
 
+getEnsemblIdsForPathway <- function(pathwayId) {
+    matchingEnsemblsToPathway <- Ensembl2ReactomeLowestLevel[grep(pathwayId, Ensembl2ReactomeLowestLevel$V2),]
+    as.list(as.character(matchingEnsemblsToPathway$V1))
+}
+
 getPathwaysIdsForChEBI <- function(ChEBIId) {
     matchingChEBIToReactome <- chEBIToReactomeLowestLevel[grep(ChEBIId, chEBIToReactomeLowestLevel$V1),]
     as.list(as.character(matchingChEBIToReactome$V2))
 }
 
-getUsablePathwaysIdsForChEBI <- function(ChEBIId) {
+getPathwaysIdsForChEBIAndOrganismCode <- function(ChEBIId, organismCode) {
+    dirtyListOfPathwaysIds <- getPathwaysIdsForChEBI(ChEBIId)
+    clearListOfPathwaysIds <- lapply(dirtyListOfPathwaysIds, function(listElement) {
+        if (strsplit(listElement, "-")[[1]][2] == organismCode) {
+            #strsplit(listElement, "-")[[1]][3]
+            listElement
+        } else {
+            NA
+        }
+
+    })
+    clearListOfPathwaysIds
+    withoutDuplicates <- removeDuplicates(clearListOfPathwaysIds)
+    removeNA(withoutDuplicates)
+}
+
+removeDuplicates <- function(dirtyList) {
+    duplicationsInDirtyList <- as.list(duplicated(dirtyList, incomparables = FALSE))
+    noDuplicationVector <- list()
+    for(i in 1:length(duplicationsInDirtyList)) {
+        if (!duplicationsInDirtyList[[i]]) {
+            noDuplicationVector <- c(noDuplicationVector, dirtyList[i])
+        }
+    }
+    noDuplicationVector
+}
+
+removeNA <- function(dirtyList) {
+    recurention <- FALSE
+    for (i in 1:length(dirtyList)) {
+        if (is.na(dirtyList[[i]])) {
+            dirtyList[[i]] <- NULL
+            recurention <- TRUE
+            break
+        }
+    }
+    if (recurention) removeNA(dirtyList)
+    dirtyList
+}
+
+getUsablePathwaysIdsForChEBIForAllOrganisms <- function(ChEBIId) {
     dirtyListOfPathwaysIds <- getPathwaysIdsForChEBI(ChEBIId)
     clearListOfPathwaysIds <- lapply(dirtyListOfPathwaysIds, function(listElement) {
         strsplit(listElement, "-")[[1]][3]
     })
     clearListOfPathwaysIds
-    duplicationsInClearList <- as.list(duplicated(clearListOfPathwaysIds, incomparables = FALSE))
-    noDuplicationVector <- list()
-    for(i in 1:length(duplicationsInClearList)) {
-        if (!duplicationsInClearList[[i]]) {
-            noDuplicationVector <- c(noDuplicationVector, clearListOfPathwaysIds[i])
-        }
-    }
-    noDuplicationVector
+    removeDuplicates(clearListOfPathwaysIds)
 }
 
 #private methods

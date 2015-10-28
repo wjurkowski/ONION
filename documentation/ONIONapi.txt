@@ -1,14 +1,16 @@
 data.frame clusterSmallMolecules( file ) {
-	//file - nm-lipidomics.txt (tylko male czasteczki)
-	//K klastrów (Rodzice Chebi)
+	//file - nm-lipidomics.txt (tylko male czasteczki), pierwsza kolumna
+	//K klastrów (Chebi <-> Pierwsze dziecko Chebi lub pierwszy Rodzic Chebi)
 	//  H1    H2
 	//1 123   ABC
 	//2 231   DEF
 	//NIE do pliku, jako obiekt.
-	//output - fa_mapping.txt (dzieci, rodzice) w ID z Chebi i chebi parent by ontology
+	//output - fa_mapping.txt (node <-> dziecko || rodzic) w ID z Chebi by ontology
 }
- 
-list[list] mapReactomePathways <- function ( data.frame fa_mapping.txt, ) {
+
+
+list[list] mapReactomePathways <- function ( data.frame fa_mapping.txt, number organismID) {
+//Be really careful when you choose output.
 	//input - fa_mapping.txt
 	//all mapReactome.R file
 	//find Gens.
@@ -18,7 +20,7 @@ list[list] mapReactomePathways <- function ( data.frame fa_mapping.txt, ) {
 
 list[list] getStringNeighbours <- function (list genesSymbolList, number organismID) { //ADDITIONAL: network searkch level
 	//input
-	//All getStringNeighbor.R    
+	//All getStringNeighbor.R
 	//Rodzic[dzieci]
 	//FOTO!!!
 	//output neighboursList - wszystkie są bialkami Rodzic[dzieci] X[a1...aj]
@@ -26,10 +28,10 @@ list[list] getStringNeighbours <- function (list genesSymbolList, number organis
 
 data.frame mapStringIDtoGeneID <- function (list neighboursList, string pochodzenieGensID) { //ADDITIONA - pochodzenieGensID
 	//input  pochodzenieGensID - z jakiej bazy są identyfikatory genów (HGNC)
-	//output 
+	//output
 	//string     gene
 	//ACAT1      ABBBC
-	//output 
+	//output
 }
 
 data.frame divideInitialTranscriptomicsData(data.fram transcriptomicsData, data.frame) {
@@ -46,9 +48,9 @@ data.frame divideInitialTranscriptomicsData(data.fram transcriptomicsData, data.
 data.frame divideInitialLipidomicsData(data.fram LipidomicsData, data.frame) {
 	//from ONION.sh
 	#split lipid data into groups
-	grep -w $G $3 | cut -f1 > gr 
-	grep -w -f gr $2 > temp 
+	grep -w $G $3 | cut -f1 > gr
+	grep -w -f gr $2 > temp
 	head -1 $2 > headl
 	cat headl temp > lipidomics-group_$G.txt
-	rm -f temp 
+	rm -f temp
 }

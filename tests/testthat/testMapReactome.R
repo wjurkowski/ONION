@@ -8,9 +8,9 @@ source("../R/mapReactome.R", chdir = TRUE)
 test_that("clusterSmallMolecules test", {
     #given
 
-    #whene
+    #when
     mr <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
-
+    mr
     #then
     expect_that( mr, is_a("data.frame") )
 })
@@ -19,8 +19,14 @@ test_that("mapReactomePathways test", {
     #given
     smallMolecules <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
 
-    #whene
-    mr <- mapReactomePathways(smallMolecules)
+    #when
+    smallMolecules
+    margeSM <- margeChEBIOntologyWithChildFavoring(smallMolecules)
+    margeSM
+    ms <- mapReactomePathways(margeSM, "HSA")
+    ms
+    ms[["28364"]]
+
     #then
     expect_that( mr, is_a("list") )
 })
