@@ -32,6 +32,7 @@ data.frame mapStringIDtoGeneID <- function (list neighboursList, string pochodze
 	//string     gene
 	//ACAT1      ABBBC
 	//output
+	use Gene ID matchin Gene IDs in user input
 }
 
 data.frame divideInitialTranscriptomicsData(data.fram transcriptomicsData, data.frame) {
