@@ -1,0 +1,23 @@
+library(ChemmineR)
+library(ChemmineOB)
+
+//loading sdf file (containg many sdf molecules)
+sdfset <- read.SDFset("web address to sdf file/local sdf file")
+
+// Checking for duplicates
+unique_ids <- makeUnique(sdfid(sdfset))
+
+// Changing IDs from CMP number to names (now molecules can be called by their names)
+ cid(sdfset) <- unique_ids
+ 
+ // list of molecules' names
+ cid(sdfset)
+ 
+ // Creating fingerprints for every molecule (FP2)
+fpset <- fingerprintOB(sdfset,"FP2")
+
+// Compound similarity searching with FPset
+as.matrix(fpSim(fpset["atracurium"], fpset, method="Tanimoto", cutoff=0.3) 
+
+
+
