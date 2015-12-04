@@ -7,17 +7,49 @@ sdfset <- read.SDFset("web address to sdf file/local sdf file")
 // Checking for duplicates
 unique_ids <- makeUnique(sdfid(sdfset))
 
-// Changing IDs from CMP number to names (now molecules can be called by their names)
- cid(sdfset) <- unique_ids
- 
- // list of molecules' names
+ // list of molecules' IDs
  cid(sdfset)
+ 
+ // Creating data frame with all of the IDs
+ AllIds <- data.frame(ID=cid(sdfset))
  
  // Creating fingerprints for every molecule (FP2)
 fpset <- fingerprintOB(sdfset,"FP2")
 
 // Compound similarity searching with FPset
-as.matrix(fpSim(fpset["atracurium"], fpset, method="Tanimoto", cutoff=0.3) 
+cluster1 <- rownames(as.matrix(fpSim(fpset[1], fpset, method="Tanimoto", cutoff=0.3))) 
+
+// Data frame with cluster1 compunds' names 
+cluster1 <- data.frame(ID=cluster1)
+
+// Removing already clustered molecules' IDs from AllIds
+del <- (!c(AllIds$ID %in% cluster1$ID))
+AllIds <- AllIds[del,]
+
+// Making AllIds as data frame again
+AllIds <- data.frame(ID= AllIds)
+
+// View of compunds' IDs that are still not clustered
+AllIds
+
+cluster2 <- rownames(as.matrix(fpSim(fpset[number of the first ID in AllIds or its "name"], fpset, method="Tanimoto", cutoff=0.3))) 
+cluster2 <- data.frame(ID=cluster2)
+del <- (!c(AllIds$ID %in% cluster2$ID))
+AllIds <- AllIds[del,]
+AllIds <- data.frame(ID= AllIds)
+AllIds
+
+// Countinue like this unitl the last molecule is clustered but in last loop stop after making new cluster 
+// as next steps won't work ( besides removing anything from AllIds isn't necessary anymore).
+// This method will cluster every molecule but often one molecule will be found in several clusters. 
+
+
+
+
+
+
+
+
 
 
 
