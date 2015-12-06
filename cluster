@@ -17,11 +17,8 @@ unique_ids <- makeUnique(sdfid(sdfset))
 fpset <- fingerprintOB(sdfset,"FP2")
 
 # Clustering, results printed to the screen
-index <- function () {
- 	  z <- nrow(AllIds)
-	   y <- c(1:z)
-}
-counter <- index()
+counter <- nrow(AllIds)
+z <- c(1:counter)
 
 k <- 1
 
