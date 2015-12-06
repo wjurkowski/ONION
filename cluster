@@ -38,6 +38,8 @@ clustering <- function () {
    }
  }
  
+ clustering()
+ 
  # This method will cluster every molecule but often one molecule will be found in several clusters. 
 
 
