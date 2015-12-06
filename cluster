@@ -1,47 +1,47 @@
 library(ChemmineR)
 library(ChemmineOB)
 
-//loading sdf file (containg many sdf molecules)
+#loading sdf file (containg many sdf molecules)
 sdfset <- read.SDFset("web address to sdf file/local sdf file")
 
-// Checking for duplicates
+#Checking for duplicates
 unique_ids <- makeUnique(sdfid(sdfset))
 
- // list of molecules' IDs
+ #list of molecules' IDs
  cid(sdfset)
  
- // Creating data frame with all of the IDs
+ #Creating data frame with all of the IDs
  AllIds <- data.frame(ID=cid(sdfset))
  
- // Creating fingerprints for every molecule (FP2)
+ #Creating fingerprints for every molecule (FP2)
 fpset <- fingerprintOB(sdfset,"FP2")
 
-// Compound similarity searching with FPset
-cluster1 <- rownames(as.matrix(fpSim(fpset[1], fpset, method="Tanimoto", cutoff=0.3))) 
+# Clustering, results printed to the screen
+index <- function () {
+ 	  z <- nrow(AllIds)
+	   y <- c(1:z)
+}
+counter <- index()
 
-// Data frame with cluster1 compunds' names 
-cluster1 <- data.frame(ID=cluster1)
+k <- 1
 
-// Removing already clustered molecules' IDs from AllIds
-del <- (!c(AllIds$ID %in% cluster1$ID))
-AllIds <- AllIds[del,]
-
-// Making AllIds as data frame again
-AllIds <- data.frame(ID= AllIds)
-
-// View of compunds' IDs that are still not clustered
-AllIds
-
-cluster2 <- rownames(as.matrix(fpSim(fpset[number of the first ID in AllIds or its "name"], fpset, method="Tanimoto", cutoff=0.3))) 
-cluster2 <- data.frame(ID=cluster2)
-del <- (!c(AllIds$ID %in% cluster2$ID))
-AllIds <- AllIds[del,]
-AllIds <- data.frame(ID= AllIds)
-AllIds
-
-// Countinue like this unitl the last molecule is clustered but in last loop stop after making new cluster 
-// as next steps won't work ( besides removing anything from AllIds isn't necessary anymore).
-// This method will cluster every molecule but often one molecule will be found in several clusters. 
+clustering <- function () {
+   while(counter > 0 ) {
+      a <- rownames(as.matrix(fpSim(fpset[as.character(AllIds[1,])], fpset, method="Tanimoto", cutoff=0.3)))
+      cluster <<- data.frame(ID=a)
+      del <- (!c(AllIds$ID %in% cluster$ID))
+      AllIds <- AllIds[del,]
+      AllIds <- data.frame(ID= AllIds)
+      counter <<- nrow(AllIds)
+      cat((i), z[k])
+      cat("\n")
+      print(cluster)
+      cat("\n")
+      k <- k+1
+   }
+ }
+ 
+ # This method will cluster every molecule but often one molecule will be found in several clusters. 
 
 
 
