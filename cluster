@@ -23,7 +23,7 @@ prep()
 # this need to be fixed!!! do not try this code!!! this works only with my sdf file (test3.sdf) because I run clustering
 # before and I know how many clusters it produces (20) and I can manually write as many components of this list as needed (number
 # of clusters). There must be some solution how to set numbers of components without writing it manually and without knowing 
-# beforehand how many iterations of while loop there will be (it will be k-1). 
+# beforehand how many iterations of while loop there will be (it will be k). 
 
 cluster <- list(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
 
@@ -38,6 +38,7 @@ clus <- function() {
     AllIds <- data.frame(ID= AllIds)
     counter <<- nrow(AllIds)
     cluster[k] <<- as.list(b)
+    if (counter == 0) break
     k <<- k+1
   }
 }
@@ -47,7 +48,7 @@ clus <- function() {
  # checking number of clusters created
 amount <- function () {
   print("number of clusters")
-  print(k-1)
+  print(k)
 }
 
 amount()
