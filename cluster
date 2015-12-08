@@ -4,41 +4,53 @@ library(ChemmineOB)
 #loading sdf file (containg many sdf molecules)
 sdfset <- read.SDFset("web address to sdf file/local sdf file")
 
-#Checking for duplicates
-unique_ids <- makeUnique(sdfid(sdfset))
+prep <- function () {
+   unique_ids <- makeUnique(sdfid(sdfset))
+   print("IDs are")
+   print(cid(sdfset))
+   AllIds <<- data.frame(ID=cid(sdfset))
+   counter <<- nrow(AllIds)
+   cat(paste("number of molecules", counter))
+   cat("\n")
+   fpset <<- fingerprintOB(sdfset,"FP2")
+   print(fpset)
+}
 
- #list of molecules' IDs
- cid(sdfset)
- 
- #Creating data frame with all of the IDs
- AllIds <- data.frame(ID=cid(sdfset))
- 
- #Creating fingerprints for every molecule (FP2)
-fpset <- fingerprintOB(sdfset,"FP2")
+prep()
 
-# Clustering, results printed to the screen
-counter <- nrow(AllIds)
-z <- c(1:counter)
+# creating list with specific number of components, each component of this list will be different 
+# cluster e.g cluster[1] will show what molecules are in cluster number 1, cluster[2] in cluster 2 etc. 
+# this need to be fixed!!! do not try this code!!! this works only with my sdf file (test3.sdf) because I run clustering
+# before and I know how many clusters it produces (20) and I can manually write as many components of this list as needed (number
+# of clusters). There must be some solution how to set numbers of components without writing it manually and without knowing 
+# beforehand how many iterations of while loop there will be (it will be k-1). 
+
+cluster <- list(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
 
 k <- 1
 
-clustering <- function () {
-   while(counter > 0 ) {
-      a <- rownames(as.matrix(fpSim(fpset[as.character(AllIds[1,])], fpset, method="Tanimoto", cutoff=0.3)))
-      cluster <<- data.frame(ID=a)
-      del <- (!c(AllIds$ID %in% cluster$ID))
-      AllIds <- AllIds[del,]
-      AllIds <- data.frame(ID= AllIds)
-      counter <<- nrow(AllIds)
-      cat((i), z[k])
-      cat("\n")
-      print(cluster)
-      cat("\n")
-      k <- k+1
-   }
- }
+clus <- function() {
+  while(counter > 0 ) {
+    a <- rownames(as.matrix(fpSim(fpset[as.character(AllIds[1,])], fpset, method="Tanimoto", cutoff=0.3)))
+    b <<- data.frame(ID=a)
+    del <- (!c(AllIds$ID %in% b$ID))
+    AllIds <- AllIds[del,]
+    AllIds <- data.frame(ID= AllIds)
+    counter <<- nrow(AllIds)
+    cluster[k] <<- as.list(b)
+    k <<- k+1
+  }
+}
+
+ clus()
  
- clustering()
+ # checking number of clusters created
+amount <- function () {
+  print("number of clusters")
+  print(k-1)
+}
+
+amount()
  
  # This method will cluster every molecule but often one molecule will be found in several clusters. 
 
