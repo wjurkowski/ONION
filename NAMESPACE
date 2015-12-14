@@ -1,0 +1,20 @@
+#Has few conflicts in methods.
+import(biomaRt)
+import(igraph)
+import(pls)
+import(stats)
+import(corrplot)
+import(yacca)
+import(FRCC)
+import(STRINGdb)
+import(RCurl)
+import(BiocCheck)
+import(testthat)
+import(httr)
+import(RJSONIO)
+#Use importFrom, will remove warnings.
+export(clusterSmallMolecules)
+export(mapReactomePathways)
+#Fill it in future.
+exportClasses()
+exportMethods()
