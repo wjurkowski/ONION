@@ -1,11 +1,13 @@
 source("R/reactomeAPI.R")
 source("R/chebiAPI.R")
+library(biomaRt)
+library(STRINGdb)
 
 #Original pseudo code API (OPCAPI):
 #
 #data.frame clusterSmallMolecules( file ) {
 #    //file - nm-lipidomics.txt (tylko male czasteczki)
-#    //K klastrów (Rodzice Chebi)
+#    //K klastr?w (Rodzice Chebi)
 #    //  H1    H2
 #    //1 123   ABC
 #    //2 231   DEF
@@ -13,6 +15,7 @@ source("R/chebiAPI.R")
 #    //output - fa_mapping.txt (dzieci, rodzice) w ID z Chebi i chebi parent by ontology
 #}
 
+#PUBLIC API
 clusterSmallMolecules <- function(pathToFile, header=TRUE) {
     smallMolecules <- read.table(pathToFile,header)
     chEBIIdsToParentsAndChildren <- decorateChEBITableByFirstParent(smallMolecules)
@@ -25,15 +28,15 @@ decorateChEBITableByFirstChild <- function(ChEBITable) {
             listElement
         } else {
             listOfChEBIIdsOfOntologyChildren <- getListOfChEBIIdsOfOntologyChildren(listElement)
-            bestParentId <- NA
+            bestChildId <- NA
             for (i in 1:length(listOfChEBIIdsOfOntologyChildren)) {
                 j <- listOfChEBIIdsOfOntologyChildren[[i]]
                 if (checkIfPathwayIdExistsForChEBIId(j)) {
-                    bestParentId <- j
+                    bestChildId <- j
                     break
                 }
             }
-            bestParentId
+            bestChildId
         }
     })
     ChEBITableAndFirstChEBIChildUnion <- data.frame(ChEBITable, firstChEBIChild=as.character(smallMoleculesChildren))
@@ -59,6 +62,7 @@ decorateChEBITableByFirstParent <- function(ChEBITable) {
     ChEBITableAndFirstChEBIParentUnion <- data.frame(ChEBITable, firstChEBIParent=as.character(smallMoleculesParents))
 }
 
+#PUBLIC API
 #TODO: Think about better aproach to <NA>, NA
 margeChEBIOntologyWithChildFavoring <- function(chEBIOntologyUnion) {
     margeResuls <- mapply(function(firstChEBIParent, firstChEBIChild) {
@@ -89,6 +93,7 @@ margeChEBIOntologyWithChildFavoring <- function(chEBIOntologyUnion) {
 #    //output genesSymbolList smallMolecules[Genes] K[x1...xn]
 #}
 
+#PUCLIC API
 #TODO: Add specification for organism.
 mapReactomePathways <- function(chEBIToParentsIdDataFrame, organismCode) {
     parentIdsList <- as.list(as.vector(chEBIToParentsIdDataFrame$firstChildOrParent))
@@ -111,12 +116,14 @@ mapReactomePathways <- function(chEBIToParentsIdDataFrame, organismCode) {
     })
     cleanAndFlatParentIdToEnsemblIdsList <- flattenList(cleanParentIdToEnsemblIdsList)
 
-    ad <- addNames(chEBIToParentsIdDataFrame, cleanAndFlatParentIdToEnsemblIdsList)
+    NoDuplicatesOnVectorElementsAndCleanFlatParentIdToEnsemblIdsList <- removeDuplicatesInListVectors(cleanAndFlatParentIdToEnsemblIdsList)
 
-#    candidateSet 2975806 //Reactome - Set
-#    entityWithAccessionedSequence 193137 //ENSEMBL, UniProt - Protein
-#    simpleEntity 113533 //ChEBI - Chemical Compound
-#    complex 5580259 //Reactome - Complex
+    ad <- addNames(chEBIToParentsIdDataFrame, NoDuplicatesOnVectorElementsAndCleanFlatParentIdToEnsemblIdsList)
+    ad
+    #    candidateSet 2975806 //Reactome - Set
+    #    entityWithAccessionedSequence 193137 //ENSEMBL, UniProt - Protein
+    #    simpleEntity 113533 //ChEBI - Chemical Compound
+    #    complex 5580259 //Reactome - Complex
 }
 
 #TODO move to utils
@@ -157,11 +164,55 @@ flattenList <- function(listToFlatten) {
     })
 }
 
+removeDuplicatesInListVectors <- function(listOfVectors) {
+    listOfVectorsWithoutDuplicates <- lapply(listOfVectors, function(listElement){
+        unique(x = listElement)
+    })
+    listOfVectorsWithoutDuplicates
+}
+
 addNames <- function(ChEBIList, flattenedList) {
     for (i in 1:length(flattenedList)) {
         names(flattenedList)[i] <- ChEBIList[i,]$ChEBI
     }
     flattenedList
+}
+
+removeEmptyElementsOnListOfCharsVectors <- function(listOfVectors) {
+    listOfVectorsWithoutEmptyChars <- lapply(listOfVectors, function(listElement){
+        clearEnsemblePeptideIds <- listElement[listElement != ""]
+        clearEnsemblePeptideIds
+    })
+    listOfVectorsWithoutEmptyChars
+}
+
+#PUBLIC API
+#Change DbId. To newest one.
+getStringNeighbours <- function (chEBIIdsToGenesSymbolList, stringOrganismId=9606, stringDbVersion = "9_1") {
+    mart <- useMart(biomart = "ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl",  host = "jul2015.archive.ensembl.org")
+    moreDataAbout <- lapply(chEBIIdsToGenesSymbolList, function(listElement){
+        if (is.null(listElement)) {
+            "NA"
+        } else {
+            additionalInformationBaseOnEnsembleGenId <- getBM(attributes = c("ensembl_gene_id", "ensembl_peptide_id", "refseq_mrna","hgnc_symbol","entrezgene"), filters = c("ensembl_gene_id"), values = listElement, mart = mart)
+            #g[['28125']][g[['28125']] != ""]
+            toclean <- additionalInformationBaseOnEnsembleGenId$ensembl_peptide_id
+            toclean
+            clearEnsemblePeptideIds <- toclean[toclean != ""]
+            clearEnsemblePeptideIds
+        }
+    })
+    moreDataAboutWithoutEmptyElements <- removeEmptyElementsOnListOfCharsVectors(moreDataAbout)
+    noDuplicates <- removeDuplicatesInListVectors(moreDataAboutWithoutEmptyElements)
+    noDuplicates
+    string_db <- STRINGdb$new( version=stringDbVersion, species=stringOrganismId, score_threshold=0, input_directory="")
+    dataWithStringNeighbours <- lapply(noDuplicates, function(listElement){
+        stringIds <- string_db$mp(listElement)
+        stringIds
+        stringNeignbours <- string_db$get_neighbors(stringIds)
+        stringNeignbours
+    })
+    dataWithStringNeighbours
 }
 
 #TODO: NOW
@@ -187,3 +238,30 @@ addNames <- function(ChEBIList, flattenedList) {
 #
 
 
+#PUBLIC API
+showPseudoClusteringResults <- function(chEBIIdsToListOfStringNeigbours) {
+    mart <- useMart(biomart = "ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl",  host = "jul2015.archive.ensembl.org")
+    chEBIIdsToListOfStringNeigboursInEnsembleIds <- mapFromStringIdsToEnsembleProteinId(chEBIIdsToListOfStringNeigbours)
+    moreDataAbout <- lapply(chEBIIdsToListOfStringNeigboursInEnsembleIds, function(listElement){
+        if (is.null(listElement)) {
+            "NA"
+        } else if (length(listElement) == 0 ) {
+            "NA"
+        } else {
+            additionalInformationBaseOnEnsembleGenId <- getBM(attributes = c("ensembl_gene_id", "ensembl_peptide_id", "refseq_mrna","hgnc_symbol","entrezgene"), filters = c("ensembl_peptide_id"), values = listElement, mart = mart)
+            additionalInformationBaseOnEnsembleGenId
+        }
+    })
+}
+
+
+mapFromStringIdsToEnsembleProteinId <- function(chEBIIdsToListOfStringNeigbours) {
+    chEBIIdsToListOfStringNeigboursInEnsembleIds <- lapply(chEBIIdsToListOfStringNeigbours, function(listElement) {
+        vectorOfEnsembleProteinIds <- sapply(listElement, function(vectorElement){
+            peptideId <- strsplit(vectorElement, "[.]")[[1]][2]
+            peptideId
+        }, USE.NAMES = FALSE)
+        vectorOfEnsembleProteinIds
+    })
+    chEBIIdsToListOfStringNeigboursInEnsembleIds
+}

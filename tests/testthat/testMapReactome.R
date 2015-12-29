@@ -5,6 +5,16 @@ print(getwd())
 
 source("../R/mapReactome.R", chdir = TRUE)
 
+
+set_up <- function() {
+    source("R/mapReactome.R")
+}
+
+tear_down <- function() {
+    cat("\014")
+}
+
+
 test_that("clusterSmallMolecules test", {
     #given
 
@@ -20,13 +30,42 @@ test_that("mapReactomePathways test", {
     smallMolecules <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
 
     #when
-    smallMolecules
     margeSM <- margeChEBIOntologyWithChildFavoring(smallMolecules)
     margeSM
     ms <- mapReactomePathways(margeSM, "HSA")
     ms
-    ms[["28364"]]
 
     #then
-    expect_that( mr, is_a("list") )
+    expect_that( ms, is_a("list") )
 })
+
+test_that("getStringNeighbours test", {
+    #given
+    smallMolecules <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
+    margeSM <- margeChEBIOntologyWithChildFavoring(smallMolecules)
+    ms <- mapReactomePathways(margeSM, "HSA")
+
+    #when
+    mp <- getStringNeighbours(ms)
+    mp
+
+    #then
+    expect_that( mp, is_a("list") )
+})
+
+test_that("showPseudoClusteringResults test", {
+    #given
+    smallMolecules <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
+    margeSM <- margeChEBIOntologyWithChildFavoring(smallMolecules)
+    #ID mapping. Reactome <-> TaxonId.
+    ms <- mapReactomePathways(margeSM, "HSA")
+    mp <- getStringNeighbours(ms)
+
+    #when
+    pseudoClustering <- showPseudoClusteringResults(mp)
+
+    #then
+    expect_that( pseudoClustering, is_a("list") )
+    pseudoClustering[["36023"]]
+})
+
