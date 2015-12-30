@@ -95,11 +95,11 @@ margeChEBIOntologyWithChildFavoring <- function(chEBIOntologyUnion) {
 
 #PUCLIC API
 #TODO: Add specification for organism.
-mapReactomePathways <- function(chEBIToParentsIdDataFrame, organismCode) {
+mapReactomePathways <- function(chEBIToParentsIdDataFrame, organismCode='9606') {
     parentIdsList <- as.list(as.vector(chEBIToParentsIdDataFrame$firstChildOrParent))
     parentIdsToPathways <- lapply(parentIdsList, function(listElement) {
         if (!is.na(listElement)) { #listElement != "NA") {
-            listOfUsablePathwaysIds <- getPathwaysIdsForChEBIAndOrganismCode(listElement, organismCode)
+            listOfUsablePathwaysIds <- getPathwaysIdsForChEBIAndOrganismCode(listElement, taxonIdToReactomeCodes[[organismCode]]$speciesCode)
         } else {
             NA
         }
@@ -125,6 +125,28 @@ mapReactomePathways <- function(chEBIToParentsIdDataFrame, organismCode) {
     #    simpleEntity 113533 //ChEBI - Chemical Compound
     #    complex 5580259 //Reactome - Complex
 }
+
+#Static hashmap taxonId <-> (reactome$speciesName, reactome$spaciesCode) Code is used in resouce files.
+taxonIdToReactomeCodes <- new.env()
+taxonIdToReactomeCodes[['9606']] <- list(speciesName='Homo sapiens', speciesCode='HSA')
+taxonIdToReactomeCodes[['3702']] <- list(speciesName='Arabidopsis thaliana', speciesCode='ATH')
+taxonIdToReactomeCodes[['9913']] <- list(speciesName='Bos taurus', speciesCode='BTA')
+taxonIdToReactomeCodes[['6239']] <- list(speciesName='Caenorhabditis elegans', speciesCode='CEL')
+taxonIdToReactomeCodes[['9615']] <- list(speciesName='Canis familiaris', speciesCode='CFA')
+taxonIdToReactomeCodes[['7955']] <- list(speciesName='Danio rerio', speciesCode='DRE')
+taxonIdToReactomeCodes[['44689']] <- list(speciesName='Dictyostelium discoideum', speciesCode='DDI')
+taxonIdToReactomeCodes[['7227']] <- list(speciesName='Drosophila melanogaster', speciesCode='DME')
+taxonIdToReactomeCodes[['9031']] <- list(speciesName='Gallus gallus', speciesCode='GGA')
+taxonIdToReactomeCodes[['10090']] <- list(speciesName='Mus musculus', speciesCode='MMU')
+taxonIdToReactomeCodes[['1773']] <- list(speciesName='Mycobacterium tuberculosis', speciesCode='MTU')
+taxonIdToReactomeCodes[['4530']] <- list(speciesName='Oryza sativa', speciesCode='OSA')
+taxonIdToReactomeCodes[['5833']] <- list(speciesName='Plasmodium falciparum', speciesCode='PFA')
+taxonIdToReactomeCodes[['10116']] <- list(speciesName='Rattus norvegicus', speciesCode='RNO')
+taxonIdToReactomeCodes[['4932']] <- list(speciesName='Saccharomyces cerevisiae', speciesCode='SCE')
+taxonIdToReactomeCodes[['4896']] <- list(speciesName='Schizosaccharomyces pombe', speciesCode='SPO')
+taxonIdToReactomeCodes[['8364']] <- list(speciesName='Xenopus tropicalis', speciesCode='XTR')
+taxonIdToReactomeCodes[['59729']] <- list(speciesName='Taeniopygia guttata', speciesCode='TGU')
+taxonIdToReactomeCodes[['9823']] <- list(speciesName='Sus scrofa', speciesCode='SSC')
 
 #TODO move to utils
 #priver util methods
@@ -188,7 +210,7 @@ removeEmptyElementsOnListOfCharsVectors <- function(listOfVectors) {
 
 #PUBLIC API
 #Change DbId. To newest one.
-getStringNeighbours <- function (chEBIIdsToGenesSymbolList, stringOrganismId=9606, stringDbVersion = "9_1") {
+getStringNeighbours <- function (chEBIIdsToGenesSymbolList, stringOrganismId=9606, stringDbVersion = "10") {
     mart <- useMart(biomart = "ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl",  host = "jul2015.archive.ensembl.org")
     moreDataAbout <- lapply(chEBIIdsToGenesSymbolList, function(listElement){
         if (is.null(listElement)) {

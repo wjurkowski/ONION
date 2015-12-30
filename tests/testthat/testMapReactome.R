@@ -58,7 +58,7 @@ test_that("showPseudoClusteringResults test", {
     smallMolecules <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
     margeSM <- margeChEBIOntologyWithChildFavoring(smallMolecules)
     #ID mapping. Reactome <-> TaxonId.
-    ms <- mapReactomePathways(margeSM, "HSA")
+    ms <- mapReactomePathways(margeSM)
     mp <- getStringNeighbours(ms)
 
     #when
