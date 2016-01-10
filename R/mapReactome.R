@@ -1,7 +1,8 @@
+#TODO:  Try remove source in some way.
 source("R/reactomeAPI.R")
 source("R/chebiAPI.R")
-library(biomaRt)
-library(STRINGdb)
+#library(biomaRt)
+#library(STRINGdb)
 
 #Original pseudo code API (OPCAPI):
 #

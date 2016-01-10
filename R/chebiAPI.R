@@ -1,5 +1,6 @@
-library(RCurl)
-library(XML)
+#library(RCurl)
+#library(XML)
+
 #BUG: Praents not children
 #TODO: Add for both, but in two different pathways.
 getListOfChEBIIdsOfOntologyChildren <- function(ChEBIId) {
