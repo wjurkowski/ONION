@@ -16,10 +16,11 @@ tear_down <- function() {
 
 test_that("shouldGoThroughONIONAPIWorkflow test", {
     #given
-    smallMolecules <- clusterSmallMolecules("D:/doktorat/repositories/ONION/example/smallMolecules.txt")
-    margeSM <- margeChEBIOntologyWithChildFavoring(smallMolecules)
+    print('*********given*********')
+    smallMolecules <- clusterSmallMolecules("../../example/smallMolecules.txt")
+    mergeSM <- mergeChEBIOntologyWithChildFavoring(smallMolecules)
     #ID mapping. Reactome <-> TaxonId.
-    ms <- mapReactomePathways(margeSM)
+    ms <- mapReactomePathways(mergeSM)
     mp <- getStringNeighbours(ms)
 
     #when

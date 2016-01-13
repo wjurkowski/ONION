@@ -16,7 +16,7 @@ import(ChemmineR)
 import(ChemmineOB)
 #Export public API methods.
 export(clusterSmallMolecules)
-export(margeChEBIOntologyWithChildFavoring)
+export(mergeChEBIOntologyWithChildFavoring)
 export(mapReactomePathways)
 export(getStringNeighbours)
 export(showPseudoClusteringResults)

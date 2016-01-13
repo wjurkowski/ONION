@@ -65,8 +65,8 @@ decorateChEBITableByFirstParent <- function(ChEBITable) {
 
 #PUBLIC API
 #TODO: Think about better aproach to <NA>, NA
-margeChEBIOntologyWithChildFavoring <- function(chEBIOntologyUnion) {
-    margeResuls <- mapply(function(firstChEBIParent, firstChEBIChild) {
+mergeChEBIOntologyWithChildFavoring <- function(chEBIOntologyUnion) {
+    mergeResuls <- mapply(function(firstChEBIParent, firstChEBIChild) {
         if (firstChEBIChild != "NA") {
             as.character(firstChEBIChild)
         } else if (firstChEBIParent != "NA") {
@@ -75,7 +75,7 @@ margeChEBIOntologyWithChildFavoring <- function(chEBIOntologyUnion) {
             NA
         }
     }, chEBIOntologyUnion$firstChEBIParent, chEBIOntologyUnion$firstChEBIChild)
-    data.frame(ChEBI=chEBIOntologyUnion$ChEBI, firstChildOrParent=margeResuls)
+    data.frame(ChEBI=chEBIOntologyUnion$ChEBI, firstChildOrParent=mergeResuls)
 }
 
 #Go to chebi, and find at least good identifier in ontology.
