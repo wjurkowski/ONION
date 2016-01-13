@@ -1,32 +1,33 @@
 #Set working directory. Solve relative path problem in tests.
 #TODO Add different behavior on CHECK and TEST.
-setwd(paste(getwd(), "/.."))
-print(getwd())
+#setwd(paste(getwd(), "/.."))
+#print(getwd())
 
-source("../R/mapReactome.R", chdir = TRUE)
+#source("../R/mapReactome.R", chdir = TRUE)
 
-test_that("clusterSmallMolecules test", {
+
+set_up <- function() {
+    source("R/mapReactome.R")
+}
+
+tear_down <- function() {
+    cat("\014")
+}
+
+test_that("shouldGoThroughONIONAPIWorkflow test", {
     #given
+    print('*********given*********')
+    smallMolecules <- clusterSmallMolecules("../../example/smallMolecules.txt")
+    mergeSM <- mergeChEBIOntologyWithChildFavoring(smallMolecules)
+    #ID mapping. Reactome <-> TaxonId.
+    ms <- mapReactomePathways(mergeSM)
+    mp <- getStringNeighbours(ms)
 
     #when
-    mr <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
-    mr
-    #then
-    expect_that( mr, is_a("data.frame") )
-})
-
-test_that("mapReactomePathways test", {
-    #given
-    smallMolecules <- clusterSmallMolecules("C:/HOME/ONIONpackage/ONION/R/smallMolecules.txt")
-
-    #when
-    smallMolecules
-    margeSM <- margeChEBIOntologyWithChildFavoring(smallMolecules)
-    margeSM
-    ms <- mapReactomePathways(margeSM, "HSA")
-    ms
-    ms[["28364"]]
+    pseudoClustering <- showPseudoClusteringResults(mp)
 
     #then
-    expect_that( mr, is_a("list") )
+    expect_that( pseudoClustering, is_a("list") )
+    #pseudoClustering[["36023"]]
 })
+

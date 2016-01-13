@@ -8,6 +8,7 @@ Maintainer: Cezary Turek <cezary.turek@gmail.com>
 Description: Packacge description, what ONION does.
 License: GNU GPL
 LazyData: TRUE
-Imports: biomaRt, igraph, pls, stats, corrplot, yacca, FRCC, STRINGdb, RCurl, BiocCheck, testthat, httr
-Depends: RCurl, RJSONIO
-Suggests: RCurl, testthat, RJSONIO
+#: Packages which are imported throught NAMESPASE file.
+Imports: RCurl, RJSONIO, XML, testthat, pls, corrplot, yacca, FRCC, httr, biomaRt, STRINGdb, BiocCheck, ChemmineR, ChemmineOB
+#: Packages with this flow dependencies: A -> B -> C and A -> C should be on Depends list.
+Depends: igraph

@@ -1,0 +1,40 @@
+Homo sapiens
+Arabidopsis thaliana
+Bos taurus
+Caenorhabditis elegans
+Canis familiaris
+Danio rerio
+Dictyostelium discoideum
+Drosophila melanogaster
+Gallus gallus
+Mus musculus
+Mycobacterium tuberculosis
+Oryza sativa
+Plasmodium falciparum
+Rattus norvegicus
+Saccharomyces cerevisiae
+Schizosaccharomyces pombe
+Sus scrofa
+Taeniopygia guttata
+Xenopus tropicalis
+
+code 	name 	preferred name 	taxid
+1 	Homo sapiens 		9606
+1 	Arabidopsis thaliana 		3702
+1 	Bos taurus 		9913
+1 	Caenorhabditis elegans 		6239
+2 	Canis familiaris 	Canis lupus familiaris 	9615
+1 	Danio rerio 		7955
+1 	Dictyostelium discoideum 		44689
+1 	Drosophila melanogaster 		7227
+1 	Gallus gallus 		9031
+1 	Mus musculus 		10090
+1 	Mycobacterium tuberculosis 		1773
+1 	Oryza sativa 		4530
+1 	Plasmodium falciparum 		5833
+1 	Rattus norvegicus 		10116
+1 	Saccharomyces cerevisiae 		4932
+1 	Schizosaccharomyces pombe 		4896
+1 	Sus scrofa 		9823
+1 	Taeniopygia guttata 		59729
+2 	Xenopus tropicalis 	Xenopus (Silurana) tropicalis 	8364

@@ -1,6 +1,6 @@
-library(RCurl)
-library(RJSONIO)
-library(XML)
+#library(RCurl)
+#library(RJSONIO)
+#library(XML)
 
 biopaxExporter <- function(level = "level3", eventId) {
     url <- paste("http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/biopaxExporter", level, eventId, sep = "/")

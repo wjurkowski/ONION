@@ -1,8 +1,7 @@
 #Has few conflicts in methods.
+#Use importFrom, will remove warnings.
 import(biomaRt)
-import(igraph)
 import(pls)
-import(stats)
 import(corrplot)
 import(yacca)
 import(FRCC)
@@ -11,10 +10,16 @@ import(RCurl)
 import(BiocCheck)
 import(testthat)
 import(httr)
+import(XML)
 import(RJSONIO)
-#Use importFrom, will remove warnings.
+import(ChemmineR)
+import(ChemmineOB)
+#Export public API methods.
 export(clusterSmallMolecules)
+export(mergeChEBIOntologyWithChildFavoring)
 export(mapReactomePathways)
+export(getStringNeighbours)
+export(showPseudoClusteringResults)
 #Fill it in future.
 exportClasses()
 exportMethods()
