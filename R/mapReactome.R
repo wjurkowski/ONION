@@ -230,12 +230,40 @@ getStringNeighbours <- function (chEBIIdsToGenesSymbolList, stringOrganismId=960
     noDuplicates
     string_db <- STRINGdb$new( version=stringDbVersion, species=stringOrganismId, score_threshold=0, input_directory="")
     dataWithStringNeighbours <- lapply(noDuplicates, function(listElement){
-        stringIds <- string_db$mp(listElement)
-        stringIds
-        stringNeignbours <- string_db$get_neighbors(stringIds)
-        stringNeignbours
+        if (checkIfValueCanBeProcessed(listElement)) {
+            stringIds <- string_db$mp(listElement)
+            stringIds
+            stringNeignbours <- string_db$get_neighbors(stringIds)
+            stringNeignbours
+        } else {
+            NA
+        }
     })
     dataWithStringNeighbours
+}
+
+checkIfValueCanBeProcessed <- function(value) {
+    if (isLengthZero(value) || isCharNA(value)) {
+        FALSE
+    } else {
+        TRUE
+    }
+}
+
+isCharNA <- function(value) {
+    if ("NA" == value) {
+        TRUE
+    } else {
+        FALSE
+    }
+}
+
+isLengthZero <- function(value) {
+    if (length(value) == 0) {
+        TRUE
+    } else {
+        FALSE
+    }
 }
 
 #TODO: NOW
@@ -264,12 +292,14 @@ getStringNeighbours <- function (chEBIIdsToGenesSymbolList, stringOrganismId=960
 #PUBLIC API
 showPseudoClusteringResults <- function(chEBIIdsToListOfStringNeigbours) {
     mart <- useMart(biomart = "ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl",  host = "jul2015.archive.ensembl.org")
-    chEBIIdsToListOfStringNeigboursInEnsembleIds <- mapFromStringIdsToEnsembleProteinId(chEBIIdsToListOfStringNeigbours)
+    chEBIIdsToListOfStringNeigboursInEnsembleIds <- mapFromStringIdsToEquivalentEnsembleId(chEBIIdsToListOfStringNeigbours)
     moreDataAbout <- lapply(chEBIIdsToListOfStringNeigboursInEnsembleIds, function(listElement){
-        if (is.null(listElement)) {
-            "NA"
-        } else if (length(listElement) == 0 ) {
-            "NA"
+        if (length(listElement) == 0) {
+            NA
+        } else if (is.null(listElement)) {
+            NA
+        } else if (is.na(listElement)) {
+            NA
         } else {
             additionalInformationBaseOnEnsembleGenId <- getBM(attributes = c("ensembl_gene_id", "ensembl_peptide_id", "refseq_mrna","hgnc_symbol","entrezgene"), filters = c("ensembl_peptide_id"), values = listElement, mart = mart)
             additionalInformationBaseOnEnsembleGenId
@@ -277,14 +307,128 @@ showPseudoClusteringResults <- function(chEBIIdsToListOfStringNeigbours) {
     })
 }
 
+#PUBLIC API
+showPseudoClusteringResultsOnGens <- function(chEBIIdsToListOfStringNeigbours) {
+    mart <- useMart(biomart = "ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl",  host = "jul2015.archive.ensembl.org")
+    chEBIIdsToListOfStringNeigboursInEnsembleIds <- mapFromStringIdsToEquivalentEnsembleId(chEBIIdsToListOfStringNeigbours)
+    moreDataAbout <- lapply(chEBIIdsToListOfStringNeigboursInEnsembleIds, function(listElement){
+        if (length(listElement) == 0) {
+            NA
+        } else if (is.null(listElement)) {
+            NA
+        } else if (is.na(listElement)) {
+            NA
+        } else {
+            additionalInformationBaseOnEnsembleGenId <- getBM(attributes = c("ensembl_gene_id", "ensembl_peptide_id", "refseq_mrna","hgnc_symbol","entrezgene"), filters = c("ensembl_gene_id"), values = listElement, mart = mart)
+            additionalInformationBaseOnEnsembleGenId
+        }
+    })
+}
 
-mapFromStringIdsToEnsembleProteinId <- function(chEBIIdsToListOfStringNeigbours) {
+
+mapFromStringIdsToEquivalentEnsembleId <- function(chEBIIdsToListOfStringNeigbours) {
     chEBIIdsToListOfStringNeigboursInEnsembleIds <- lapply(chEBIIdsToListOfStringNeigbours, function(listElement) {
-        vectorOfEnsembleProteinIds <- sapply(listElement, function(vectorElement){
-            peptideId <- strsplit(vectorElement, "[.]")[[1]][2]
-            peptideId
-        }, USE.NAMES = FALSE)
-        vectorOfEnsembleProteinIds
+        if (length(listElement) == 0) {
+            NA
+        } else if (is.null(listElement)) {
+            NA
+        } else if (is.na(listElement)) {
+            NA
+        } else {
+            vectorOfEnsembleProteinIds <- sapply(listElement, function(vectorElement){
+                peptideId <- strsplit(vectorElement, "[.]")[[1]][2]
+                if (is.na(peptideId)) {
+                    vectorElement
+                } else {
+                    peptideId
+                }
+            }, USE.NAMES = FALSE);
+            vectorOfEnsembleProteinIds
+        }
     })
     chEBIIdsToListOfStringNeigboursInEnsembleIds
+}
+
+
+#PUBLIC API
+makeCCAOnData <- function(vectorOfChebiIds, vectorOfHgncSymbols,
+                          pathToFileWithTranscriptomicsData, pathToFileWithLipidomicsData) {
+    transcriptomicsData <- readWithoutDuplicates(pathToFileWithTranscriptomicsData)
+    lipidomicsData <- readWithoutDuplicates(pathToFileWithLipidomicsData)
+    X <- as.matrix(t(transcriptomicsData))
+    Y <- as.matrix(t(lipidomicsData))
+    matchedGensData <- match(vectorOfHgncSymbols, colnames(X))
+    matchedChebiData <- match(vectorOfChebiIds, colnames(Y))
+    factorOfMatchedGensData <- factor(matchedGensData)
+    factorOfMatchedChebiData <- factor(matchedChebiData)
+    machedX <- X[,as.numeric(levels(factorOfMatchedGensData))]
+    machedY <- Y[,as.numeric(levels(factorOfMatchedChebiData))]
+
+    if (is.numeric(machedX) && is.numeric(machedX)) {
+        if (is.matrix(machedX)) {
+        } else {
+            machedX <- matrix(machedX)
+        }
+        if (is.matrix(machedY)) {
+        } else {
+            machedY <- matrix(machedY)
+        }
+    }
+
+    ccaFromCCA <- tryCatch(
+        {
+            cc(machedX, machedY)
+        },
+        error=function(cond) {
+            message("ONION - Included CCA can not solve task.")
+            message("Original message (CCA):")
+            message(cond)
+            # Choose a return value in case of error
+            return(NA)
+        },
+        warning=function(cond) {
+            message("ONION - Included CCA present warning.")
+            message("Original message (CCA):")
+            message(cond)
+            # Choose a return value in case of warning
+            return(NULL)
+        },
+        finally={
+            message("ONION - CCA (CCA) finished with success.")
+        }
+    )
+
+    ccaFromyacca <- tryCatch(
+        {
+            cca(machedX, machedY)
+        },
+        error=function(cond) {
+            message("ONION - Included CCA can not solve task.")
+            message("Original message (yacca):")
+            message(cond)
+            # Choose a return value in case of error
+            return(NA)
+        },
+        warning=function(cond) {
+            message("ONION - Included CCA present warning.")
+            message("Original message (yacca):")
+            message(cond)
+            # Choose a return value in case of warning
+            return(NULL)
+        },
+        finally={
+            message("ONION - CCA (yacca) finished with success.")
+        }
+    )
+
+    doubleCCA = list(CCA = ccaFromCCA, yacca = ccaFromyacca)
+    doubleCCA
+}
+
+
+#TODO: Remove all duplicates refactor to skip wrong gens ids.
+#Analiza różnicowa, differencial analysis.
+readWithoutDuplicates <- function(filePath) {
+    transcriptomics <- read.table(filePath, header = TRUE, row.names = NULL);
+    transcriptomicsWithoutDuplicates <- data.frame(transcriptomics[!duplicated(transcriptomics[1]), ], row.names = 1)
 }
