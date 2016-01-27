@@ -17,6 +17,7 @@ setDeveloperEnvironment <- function() {
     install.packages('RJSONIO')
     install.packages('XML')
     install.packages('S4Vectors')
+    install.packages('CCA')
     #install.packages('stats') not available anyweare.
     source('https://bioconductor.org/biocLite.R')
     biocLite('biomaRt')
