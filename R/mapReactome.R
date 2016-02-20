@@ -287,10 +287,15 @@ isLengthZero <- function(value) {
 #
 #
 #
-
+constans <- list(
+    pseudoClasteringsFilters=list(
+        ensemblPeptideId="ensembl_peptide_id",
+        ensemblGeneId="ensembl_gene_id"
+    )
+)
 
 #PUBLIC API
-showPseudoClusteringResults <- function(chEBIIdsToListOfStringNeigbours) {
+showPseudoClusteringResults <- function(chEBIIdsToListOfStringNeigbours, filter) {
     mart <- useMart(biomart = "ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl",  host = "jul2015.archive.ensembl.org")
     chEBIIdsToListOfStringNeigboursInEnsembleIds <- mapFromStringIdsToEquivalentEnsembleId(chEBIIdsToListOfStringNeigbours)
     moreDataAbout <- lapply(chEBIIdsToListOfStringNeigboursInEnsembleIds, function(listElement){
@@ -301,25 +306,7 @@ showPseudoClusteringResults <- function(chEBIIdsToListOfStringNeigbours) {
         } else if (is.na(listElement)) {
             NA
         } else {
-            additionalInformationBaseOnEnsembleGenId <- getBM(attributes = c("ensembl_gene_id", "ensembl_peptide_id", "refseq_mrna","hgnc_symbol","entrezgene"), filters = c("ensembl_peptide_id"), values = listElement, mart = mart)
-            additionalInformationBaseOnEnsembleGenId
-        }
-    })
-}
-
-#PUBLIC API
-showPseudoClusteringResultsOnGens <- function(chEBIIdsToListOfStringNeigbours) {
-    mart <- useMart(biomart = "ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl",  host = "jul2015.archive.ensembl.org")
-    chEBIIdsToListOfStringNeigboursInEnsembleIds <- mapFromStringIdsToEquivalentEnsembleId(chEBIIdsToListOfStringNeigbours)
-    moreDataAbout <- lapply(chEBIIdsToListOfStringNeigboursInEnsembleIds, function(listElement){
-        if (length(listElement) == 0) {
-            NA
-        } else if (is.null(listElement)) {
-            NA
-        } else if (is.na(listElement)) {
-            NA
-        } else {
-            additionalInformationBaseOnEnsembleGenId <- getBM(attributes = c("ensembl_gene_id", "ensembl_peptide_id", "refseq_mrna","hgnc_symbol","entrezgene"), filters = c("ensembl_gene_id"), values = listElement, mart = mart)
+            additionalInformationBaseOnEnsembleGenId <- getBM(attributes = c("ensembl_gene_id", "ensembl_peptide_id", "refseq_mrna","hgnc_symbol","entrezgene"), filters = c(filter), values = listElement, mart = mart)
             additionalInformationBaseOnEnsembleGenId
         }
     })
@@ -350,6 +337,8 @@ mapFromStringIdsToEquivalentEnsembleId <- function(chEBIIdsToListOfStringNeigbou
 }
 
 
+
+
 #PUBLIC API
 makeCCAOnData <- function(vectorOfChebiIds, vectorOfHgncSymbols,
                           pathToFileWithTranscriptomicsData, pathToFileWithLipidomicsData) {
@@ -375,29 +364,6 @@ makeCCAOnData <- function(vectorOfChebiIds, vectorOfHgncSymbols,
         }
     }
 
-    ccaFromCCA <- tryCatch(
-        {
-            cc(machedX, machedY)
-        },
-        error=function(cond) {
-            message("ONION - Included CCA can not solve task.")
-            message("Original message (CCA):")
-            message(cond)
-            # Choose a return value in case of error
-            return(NA)
-        },
-        warning=function(cond) {
-            message("ONION - Included CCA present warning.")
-            message("Original message (CCA):")
-            message(cond)
-            # Choose a return value in case of warning
-            return(NULL)
-        },
-        finally={
-            message("ONION - CCA (CCA) finished with success.")
-        }
-    )
-
     ccaFromyacca <- tryCatch(
         {
             cca(machedX, machedY)
@@ -421,14 +387,116 @@ makeCCAOnData <- function(vectorOfChebiIds, vectorOfHgncSymbols,
         }
     )
 
-    doubleCCA = list(CCA = ccaFromCCA, yacca = ccaFromyacca)
-    doubleCCA
+    #doubleCCA = list(CCA = ccaFromCCA, yacca = ccaFromyacca)
+    #doubleCCA
+    ccaFromyacca
 }
 
+#PUBLIC API
+makeGlobalCCA <- function(clasteredList) {
+    result <- lapply(as.list(names(clasteredList)), function(listName) {
+        listElement <- clasteredList[[listName]]
+        if (length(listElement) == 0) {
+            NA
+        } else if (is.null(listElement)) {
+            NA
+        } else if (is.na(listElement)) {
+            NA
+        } else {
+            makeCCAOnData(listName, listElement$hgnc_symbol, "D:/doktorat/repositories/ONION/example/transTest.txt",
+                          "D:/doktorat/repositories/ONION/example/nm-lipidomics.txt")
+        }
+    })
+    names(result) <- names(clasteredList)
+    result
+}
+
+showOnlyValuableResults <- function(globalResults) {
+    clearGlobalResult <- list()
+    savedNames <- c()
+    lapply(names(globalResults), function(index, clearGlobalResult){
+        if (is.na(globalResults[[index]])) {
+        } else {
+            clearGlobalResult <<- append(clearGlobalResult, list(index=globalResults[[index]]))
+            savedNames <<- c(savedNames, index)
+        }
+    }, clearGlobalResult=clearGlobalResult)
+    names(clearGlobalResult) <- savedNames
+    clearGlobalResult
+}
+
+makeYaccaCharts <- function(CCAResults, xLabel="GENES", yLabel="LIPIDS") {
+    helio.plot(CCAResults, x.name=xLabel, y.name=yLabel)
+}
 
 #TODO: Remove all duplicates refactor to skip wrong gens ids.
 #Analiza różnicowa, differencial analysis.
 readWithoutDuplicates <- function(filePath) {
     transcriptomics <- read.table(filePath, header = TRUE, row.names = NULL);
     transcriptomicsWithoutDuplicates <- data.frame(transcriptomics[!duplicated(transcriptomics[1]), ], row.names = 1)
+}
+
+getOnlyDataMachedInBothSets <- function(vectorOfMoleculesIds, pathToFileWithExperimentalData) {
+    transcriptomicsData <- readWithoutDuplicates(pathToFileWithExperimentalData)
+    X <- as.matrix(t(transcriptomicsData))
+    matchedGensData <- match(vectorOfMoleculesIds, colnames(X))
+    factorOfMatchedGensData <- factor(matchedGensData)
+    machedX <- X[,as.numeric(levels(factorOfMatchedGensData))]
+    machedXMatrix <- convertNumericToMatrix(machedX)
+    machedXMatrix
+}
+
+convertNumericToMatrix <- function(matrixOrNumericClass) {
+    if (is.matrix(matrixOrNumericClassX)) {
+        machedX <- matrixOrNumericClass
+    } else {
+        machedX <- matrix(matrixOrNumericClass)
+    }
+    machedX
+}
+
+makePLSOnData <- function(vectorOfChebiIds, vectorOfHgncSymbols,
+                          pathToFileWithTranscriptomicsData, pathToFileWithLipidomicsData) {
+    machedXMatrix <- getOnlyDataMachedInBothSets(vectorOfHgncSymbols, pathToFileWithTranscriptomicsData)
+    machedYMatrix <- getOnlyDataMachedInBothSets(vectorOfChebiIds, pathToFileWithLipidomicsData)
+
+    PLSResults <- tryCatch(
+        {
+            Xmelt <- I(as.matrix(machedXMatrix))
+            Ymelt <- I(as.matrix(machedYMatrix))
+            realData = list(Xmelt,Ymelt)
+            # Coefficiens - what should be, or what type of arguments?
+            #, ncomp=as.numeric("10")
+            plsr(Y ~ X, data = realData, validation="LOO")
+        },
+        error=function(cond) {
+            message("ONION - PLS fail, it can not solve problem.")
+            message("Original message (PLS):")
+            message(cond)
+            # Choose a return value in case of error
+            return(NA)
+        },
+        warning=function(cond) {
+            message("ONION - PLS fail, it can not solve problem.")
+            message("Original message (PLS):")
+            message(cond)
+            # Choose a return value in case of warning
+            return(NULL)
+        },
+        finally={
+            message("ONION - PLS finished with success.")
+        }
+    )
+
+    PLSResults
+}
+
+makePLSCharts <- function(PLS) {
+    png("PLS_loadings.png", width = 640, height = 480)
+        par(mfrow = c(2,2))
+        biplot(PLS, which = "x") # Default
+        biplot(PLS, which = "y")
+        biplot(PLS, which = "scores")
+        biplot(PLS, which = "loadings")
+    dev.off()
 }
