@@ -18,6 +18,10 @@ setDeveloperEnvironment <- function() {
     install.packages('XML')
     install.packages('S4Vectors')
     install.packages('CCA')
+    install.packages('gridExtra')
+    #Since 3.1 bioConductor
+    source("http://bioconductor.org/biocLite.R")
+    biocLite()
     #install.packages('stats') not available anyweare.
     source('https://bioconductor.org/biocLite.R')
     biocLite('biomaRt')
@@ -27,6 +31,9 @@ setDeveloperEnvironment <- function() {
     biocLite('ChemmineR')
     biocLite('ChemmineOB')
 }
+source("http://bioconductor.org/biocLite.R") # Sources the biocLite.R installation script.
+biocLite("ChemmineR") # Installs the package.
+
 
 #TODO: Set up devtools to smart and fast builds.
 

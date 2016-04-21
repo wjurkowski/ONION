@@ -1,8 +1,6 @@
 #TODO:  Try remove source in some way.
-source("R/reactomeAPI.R")
-source("R/chebiAPI.R")
-#library(biomaRt)
-#library(STRINGdb)
+
+# source("R/reactomeAPI.R")
 
 #Original pseudo code API (OPCAPI):
 #
@@ -15,6 +13,12 @@ source("R/chebiAPI.R")
 #    //NIE do pliku, jako obiekt.
 #    //output - fa_mapping.txt (dzieci, rodzice) w ID z Chebi i chebi parent by ontology
 #}
+# NEW PUBLIC API:
+clasterUsingOntology <- function(pathToFile, header=TRUE, ontologyRepresentatnion) {
+    baseData <- read.table(pathToFile, header)
+    ontologyDataFrame <- ontologyRepresentatnion(baseData)
+    ontologyDataFrame
+}
 
 #PUBLIC API
 clusterSmallMolecules <- function(pathToFile, header=TRUE) {
@@ -23,49 +27,9 @@ clusterSmallMolecules <- function(pathToFile, header=TRUE) {
     chEBIIdsToParentsAndChildren <- decorateChEBITableByFirstChild(chEBIIdsToParentsAndChildren)
 }
 
-decorateChEBITableByFirstChild <- function(ChEBITable) {
-    smallMoleculesChildren <- lapply(as.list(as.character(ChEBITable$ChEBI)), function(listElement) {
-        if (checkIfPathwayIdExistsForChEBIId(listElement)) {
-            listElement
-        } else {
-            listOfChEBIIdsOfOntologyChildren <- getListOfChEBIIdsOfOntologyChildren(listElement)
-            bestChildId <- NA
-            for (i in 1:length(listOfChEBIIdsOfOntologyChildren)) {
-                j <- listOfChEBIIdsOfOntologyChildren[[i]]
-                if (checkIfPathwayIdExistsForChEBIId(j)) {
-                    bestChildId <- j
-                    break
-                }
-            }
-            bestChildId
-        }
-    })
-    ChEBITableAndFirstChEBIChildUnion <- data.frame(ChEBITable, firstChEBIChild=as.character(smallMoleculesChildren))
-}
-
-decorateChEBITableByFirstParent <- function(ChEBITable) {
-    smallMoleculesParents <- lapply(as.list(as.character(ChEBITable$ChEBI)), function(listElement) {
-        if (checkIfPathwayIdExistsForChEBIId(listElement)) {
-            listElement
-        } else {
-            listOfChEBIIdsOfOntologyParents <- getListOfChEBIIdsOfOntologyParents(listElement)
-            bestParentId <- NA
-            for (i in 1:length(listOfChEBIIdsOfOntologyParents)) {
-                j <- listOfChEBIIdsOfOntologyParents[[i]]
-                if (checkIfPathwayIdExistsForChEBIId(j)) {
-                    bestParentId <- j
-                    break
-                }
-            }
-            bestParentId
-        }
-    })
-    ChEBITableAndFirstChEBIParentUnion <- data.frame(ChEBITable, firstChEBIParent=as.character(smallMoleculesParents))
-}
-
 #PUBLIC API
 #TODO: Think about better aproach to <NA>, NA
-mergeChEBIOntologyWithChildFavoring <- function(chEBIOntologyUnion) {
+OLDmergeChEBIOntologyWithChildFavoring <- function(chEBIOntologyUnion) {
     mergeResuls <- mapply(function(firstChEBIParent, firstChEBIChild) {
         if (firstChEBIChild != "NA") {
             as.character(firstChEBIChild)
@@ -111,7 +75,7 @@ mapReactomePathways <- function(chEBIToParentsIdDataFrame, organismCode='9606') 
             getEnsemblIdsForPathway(pathwayId)
         })
     })
-    parentIdsToEnsemblIds
+    parentIdsToEnsemblIdsdfPL
     cleanParentIdToEnsemblIdsList <- lapply(parentIdsToEnsemblIds, function(listElement) {
         removeEmptyLists(listElement)
     })
@@ -125,6 +89,16 @@ mapReactomePathways <- function(chEBIToParentsIdDataFrame, organismCode='9606') 
     #    entityWithAccessionedSequence 193137 //ENSEMBL, UniProt - Protein
     #    simpleEntity 113533 //ChEBI - Chemical Compound
     #    complex 5580259 //Reactome - Complex
+}
+
+# NEW PUBLIC API:
+mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyId='9606') {
+    chebiIdsToEnsembleIds <- ldply(.data = chebiOntologyIds$ontologyId, .fun = function(vectorElement) {
+        pathwayIds <- ReactomeAPI::getPathwaysIdsForChebiUnderOrganism(vectorElement, taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
+        chebiIdToEnsembleIds <- data.frame('chebiId' = as.character(vectorElement), 'ensembleIds' = I(list(ensembeIds)))
+        chebiIdToEnsembleIds
+    })
+    chebiIdsToEnsembleIds
 }
 
 #Static hashmap taxonId <-> (reactome$speciesName, reactome$spaciesCode) Code is used in resouce files.
@@ -149,69 +123,30 @@ taxonIdToReactomeCodes[['8364']] <- list(speciesName='Xenopus tropicalis', speci
 taxonIdToReactomeCodes[['59729']] <- list(speciesName='Taeniopygia guttata', speciesCode='TGU')
 taxonIdToReactomeCodes[['9823']] <- list(speciesName='Sus scrofa', speciesCode='SSC')
 
-#TODO move to utils
-#priver util methods
-removeEmptyLists <- function(dirtyList) {
-    recurention <- FALSE
-    if (length(dirtyList) == 0) {
-    } else {
-        for (i in 1:length(dirtyList)) {
-            if (length(dirtyList[[i]]) == 0) {
-                dirtyList[[i]] <- NULL
-                recurention <- TRUE
-                break
-            }
+
+
+# NEW PUBLIC API
+getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9606, stringDbVersion = "10") {
+    string_db <- STRINGdb$new( version = stringDbVersion, species = stringOrganismId)
+    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways$chebiId == 0, ]
+    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, .(chebiId), .fun = function(dfElement) {
+        returnNeighbourVector <- character(length = 0)
+        if (0 == length(dfElement$ensembleIds[[1]])) {
+        } else {
+            proteinIds <- ONION::getEnsemblProteinsIdsBaseOnEnsemblGensIdsUsingMyGenePackage(dfElement$ensembleIds,
+                                                                                             organismTaxonomyId = stringOrganismId)
+            stringId1 <- string_db$mp(proteinIds)
+            returnNeighbourVector <- string_db$get_neighbors(stringId1)
         }
-    }
-    if (recurention) {
-        dirtyList <- removeEmptyLists(dirtyList)
-    }
-    dirtyList
-}
-
-flattenList <- function(listToFlatten) {
-    lapply(listToFlatten, function(listElement){
-        if (length(listElement) != 0) {
-            listToReturn <- list()
-            for (i in 1:length(listElement)) {
-                if (length(listElement[[i]]) != 0) {
-                    for (j in 1:length(listElement[[i]])) {
-                        listToReturn <- c(listToReturn, listElement[[i]][[j]])
-                    }
-                }
-            }
-            #as.vector(listToReturn)
-            as.character(listToReturn)
-            #listToReturn
-        }
+        dffff <- data.frame('chebiId' = dfElement$chebiId, 'ensembleIds' = dfElement$ensembleIds[1],
+                            'stringIds' = I(list(unique(returnNeighbourVector))))
+        dffff
     })
-}
-
-removeDuplicatesInListVectors <- function(listOfVectors) {
-    listOfVectorsWithoutDuplicates <- lapply(listOfVectors, function(listElement){
-        unique(x = listElement)
-    })
-    listOfVectorsWithoutDuplicates
-}
-
-addNames <- function(ChEBIList, flattenedList) {
-    for (i in 1:length(flattenedList)) {
-        names(flattenedList)[i] <- ChEBIList[i,]$ChEBI
-    }
-    flattenedList
-}
-
-removeEmptyElementsOnListOfCharsVectors <- function(listOfVectors) {
-    listOfVectorsWithoutEmptyChars <- lapply(listOfVectors, function(listElement){
-        clearEnsemblePeptideIds <- listElement[listElement != ""]
-        clearEnsemblePeptideIds
-    })
-    listOfVectorsWithoutEmptyChars
 }
 
 #PUBLIC API
 #Change DbId. To newest one.
-getStringNeighbours <- function (chEBIIdsToGenesSymbolList, stringOrganismId=9606, stringDbVersion = "10") {
+OLDgetStringNeighbours <- function (chEBIIdsToGenesSymbolList, stringOrganismId=9606, stringDbVersion = "10") {
     mart <- useMart(biomart = "ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl",  host = "jul2015.archive.ensembl.org")
     moreDataAbout <- lapply(chEBIIdsToGenesSymbolList, function(listElement){
         if (is.null(listElement)) {
@@ -242,29 +177,21 @@ getStringNeighbours <- function (chEBIIdsToGenesSymbolList, stringOrganismId=960
     dataWithStringNeighbours
 }
 
-checkIfValueCanBeProcessed <- function(value) {
-    if (isLengthZero(value) || isCharNA(value)) {
-        FALSE
-    } else {
-        TRUE
-    }
+# TODO: Make not public API.
+getEnsemblProteinsIdsBaseOnEnsemblGensIdsUsingMyGenePackage <- function(gensIdsVector, organismTaxonomyId) {
+    # genes <- getGenes(gensIdsVector, fields = "all")
+    # genes$symbol
+    # genes$ensembl.protein
+    additionalInformationBaseOnEnsemblGenId <- queryMany(gensIdsVector, fields = c("symbol","ensembl.protein"),
+                                                         species = organismTaxonomyId)
+    equivalentEnsemlProteinsIds <- unlist(additionalInformationBaseOnEnsemblGenId$ensembl.protein)
+    equivalentEnsemlProteinsIdsVector <- lapply(equivalentEnsemlProteinsIds, function(characterListElement){
+        characterListElement
+    });
+    equivalentEnsemlProteinsIdsVector <- as.character(unlist(equivalentEnsemlProteinsIdsVector))
+    equivalentEnsemlProteinsIdsVector
 }
 
-isCharNA <- function(value) {
-    if ("NA" == value) {
-        TRUE
-    } else {
-        FALSE
-    }
-}
-
-isLengthZero <- function(value) {
-    if (length(value) == 0) {
-        TRUE
-    } else {
-        FALSE
-    }
-}
 
 #TODO: NOW
 #Use Ensamble2Reactome.txt file
@@ -429,12 +356,8 @@ makeYaccaCharts <- function(CCAResults, xLabel="GENES", yLabel="LIPIDS") {
     helio.plot(CCAResults, x.name=xLabel, y.name=yLabel)
 }
 
-#TODO: Remove all duplicates refactor to skip wrong gens ids.
 #Analiza różnicowa, differencial analysis.
-readWithoutDuplicates <- function(filePath) {
-    transcriptomics <- read.table(filePath, header = TRUE, row.names = NULL);
-    transcriptomicsWithoutDuplicates <- data.frame(transcriptomics[!duplicated(transcriptomics[1]), ], row.names = 1)
-}
+
 
 getOnlyDataMachedInBothSets <- function(vectorOfMoleculesIds, pathToFileWithExperimentalData) {
     transcriptomicsData <- readWithoutDuplicates(pathToFileWithExperimentalData)

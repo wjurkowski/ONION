@@ -14,6 +14,17 @@ tear_down <- function() {
     cat("\014")
 }
 
+test_that("NewOnionApiWorkflow test", {
+    #given
+    print('*********given*********')
+    clasteredSmallMolecules <- ONION::clasterUsingOntology(pathToFile = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt",
+                                header = TRUE, ontologyRepresentatnion = ONION::createFirstExistsInReactomeChebiOntology)
+    mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clasteredSmallMolecules)
+    chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules, organismTaxonomyId = '9606')
+    chebiIdsToReactomePathways$ensembleIds[[11]]
+    chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(chebiIdsToReactomePathways)
+})
+
 test_that("shouldGoThroughONIONAPIWorkflow test", {
     #given
     print('*********given*********')
