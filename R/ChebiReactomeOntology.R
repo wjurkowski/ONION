@@ -1,5 +1,5 @@
 
-createFirstExistsInReactomeChebiOntology <- function(baseData) {
+firstExistsInReactomeChebiOntology <- function(baseData) {
     firstExistsInReactomeChebiOntologyDataFrame <- ldply(baseData$ChEBI, function(dataRow) {
         child <- 0
         parent <- 0
@@ -33,14 +33,18 @@ createFirstExistsInReactomeChebiOntology <- function(baseData) {
 mergeChEBIOntologyWithChildFavoring <- function(chebiOntologyDataFrame) {
     mergeOntologyDataFrame <- ddply(chebiOntologyDataFrame, .(root), function(dataFrameRow){
         ontologyId <- 0
+        whoWins <- 'N'
         if (1 == dataFrameRow$child && 1 == dataFrameRow$parent) {
             ontologyId <- dataFrameRow$root
+            whoWins <- 'R'
         } else if (0 != dataFrameRow$child) {
             ontologyId <- dataFrameRow$child
+            whoWins <- 'C'
         } else if (0 != dataFrameRow$parent) {
             ontologyId <- dataFrameRow$parent
+            whoWins <- 'P'
         }
-        data.frame('ontologyId' = ontologyId)
+        data.frame('ontologyId' = ontologyId, 'root' = dataFrameRow$root, 'whoWins' = whoWins)
     })
-    mergeOntologyDataFrame['ontologyId']
+    mergeOntologyDataFrame
 }

@@ -30,6 +30,7 @@ setDeveloperEnvironment <- function() {
     biocLite('S4Vectors')
     biocLite('ChemmineR')
     biocLite('ChemmineOB')
+    biocLite("mygene")
 }
 source("http://bioconductor.org/biocLite.R") # Sources the biocLite.R installation script.
 biocLite("ChemmineR") # Installs the package.

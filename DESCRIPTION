@@ -9,7 +9,7 @@ Description: Packacge description, what ONION does.
 License: GNU GPL
 LazyData: TRUE
 #: Packages which are imported throught NAMESPASE file. (ChemmineOB)
-Imports: RCurl, RJSONIO, XML, testthat, pls, corrplot, yacca, FRCC, httr, biomaRt, STRINGdb, BiocCheck, ChemmineR, CCA, gridExtra, mygene
+Imports: RCurl, RJSONIO, XML, testthat, pls, corrplot, yacca, FRCC, httr, biomaRt, STRINGdb, BiocCheck, CCA, gridExtra, mygene
 #: Packages with this flow dependencies: A -> B -> C and A -> C should be on Depends list.
 Depends: igraph, ChebiAPI, plyr, ReactomeAPI
 Collate:

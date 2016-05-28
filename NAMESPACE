@@ -12,43 +12,32 @@ import(testthat)
 import(httr)
 import(XML)
 import(RJSONIO)
-import(ChemmineR)
+# import(ChemmineR)
 import(plyr)
 import(mygene)
 import(gridExtra)
 # import(ChemmineOB)
 import(CCA)
+
 # Export NEW PUBLIC API
 export(clasterUsingOntology)
-export(createFirstExistsInReactomeChebiOntology)
+export(firstExistsInReactomeChebiOntology)
 export(mergeChEBIOntologyWithChildFavoring)
 export(mapReactomePathwaysUnderOrganism)
-export(getEnsemblProteinsIdsBaseOnEnsemblGensIdsUsingMyGenePackage)
-export(readWithoutDuplicates)
-# DEV Exports
-export(removeEmptyLists)
-export(flattenList)
-export(removeDuplicatesInListVectors)
-export(addNames)
-export(removeEmptyElementsOnListOfCharsVectors)
-export(checkIfValueCanBeProcessed)
-export(isCharNA)
-export(isLengthZero)
-#Export public API methods.
-export(clusterSmallMolecules)
-export(mergeChEBIOntologyWithChildFavoring)
-export(mapReactomePathways)
 export(getStringNeighbours)
-export(showPseudoClusteringResults)
-export(makeCCAOnData)
-export(makeGlobalCCA)
-export(showOnlyValuableResults)
-export(makeYaccaCharts)
+export(makeCanonicalCorrelationAnalysis)
+export(plotCanonicalCorrelationAnalysisResults)
+
+# DEV Exports.
+export(readWithoutDuplicates)
+
+# OLD PUBLIC exports.
 export(makePLSOnData)
 export(makePLSCharts)
-#Export CONST
+
+# Export CONST
 export(constans)
 export(taxonIdToReactomeCodes)
-#Fill it in future.
+# Fill it in future.
 exportClasses()
 exportMethods()
