@@ -62,6 +62,35 @@ test_that("NewOnionApiWorkflow test", {
     plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults2)
 
 
+    PLSResult1 <- ONION::makePartialLeastSquaresRegression(
+        joinRecatomeTrans,
+        joinLip,
+        pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-transcriptomics.txt",
+        pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt")
+
+    PLSResult2 <- ONION::makePartialLeastSquaresRegression(
+        joinStringTrans,
+        joinLip,
+        pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-transcriptomics.txt",
+        pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt")
+
+
+
+    summary(PLSResult1$training)
+    summary(PLSResult2$training)
+
+    ONION::plotRmsepForPLS(PLSResult1$training)
+    ONION::plotRmsepForPLS(PLSResult2$training)
+
+    ONION::plotRegression(PLSResult1$training, ncompValue = 10)
+    ONION::plotRegression(PLSResult2$training, ncompValue = 10)
+
+    PLSResult1$test
+    PLSResult1$testRmsep
+
+    PLSResult2$test
+    PLSResult2$testRmsep
+
     # IMPORTANT
     # Counterexample of STRINGdb.
     stringOrganismId = 9606

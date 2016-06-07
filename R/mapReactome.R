@@ -188,6 +188,51 @@ plotCanonicalCorrelationAnalysisResults <- function(ccaResults, x.name = "xLabel
     helio.plot(ccaResults, x.name = "xLabel", y.name = "yLabel")
 }
 
+# NEW PUBLIC API
+makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector
+                                              , pathToFileWithXData, pathToFileWithYData
+                                              , treiningTestBoundary = 0.85, ncompValue = 10) {
+    # Where XData = transcriptomicsData and YData = lipidomicsData.
+    XData <- readWithoutDuplicates(pathToFileWithXData)
+    YData <- readWithoutDuplicates(pathToFileWithYData)
+
+    transposedXData <- as.data.frame(t(XData))
+    transposedYData <- as.data.frame(t(YData))
+
+    interX <- intersect(colnames(transposedXData), xNamesVector)
+    interY <- intersect(colnames(transposedYData), yNamesVector)
+
+    X <- transposedXData[as.character(interX)]
+    Y <- transposedYData[as.character(interY)]
+
+    Xmelt <- I(as.matrix(X))
+    Ymelt <- I(as.matrix(Y))
+
+    combined <- data.frame(X = I(Xmelt), Y = I(Ymelt))
+
+    trainingRows <- ceiling(treiningTestBoundary * nrow(combined))
+    combinedToTraining <- combined[1:trainingRows,]
+    combinedToTest <- combined[(trainingRows + 1):nrow(combined),]
+
+    PLSResultsFromMatrixInDF <- plsr(Y ~ X, data = combinedToTraining)
+
+    PlsPredict <- predict(PLSResultsFromMatrixInDF, ncomp = ncompValue, newdata = combinedToTest)
+    PlsTestRmsep <- RMSEP(PLSResultsFromMatrixInDF, newdata = combinedToTest)
+
+    #TODO: TRAINING and TEST is required!
+    PLSResults <- list(training = PLSResultsFromMatrixInDF, test = PlsPredict, testRmsep = PlsTestRmsep)
+    PLSResults
+}
+
+# NEW PUBLIC API
+plotRmsepForPLS <- function(PLSResult) {
+    plot(pls::RMSEP(PLSResult), legendpos = "topright")
+}
+
+plotRegression <- function(PLSResult, ncompValue) {
+    plot(PLSResult, ncomp = ncompValue, asp = 1, line = TRUE)
+}
+
 
 # TODO: Refactor PLS.
 #Analiza różnicowa, differencial analysis.

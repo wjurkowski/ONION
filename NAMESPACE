@@ -27,6 +27,10 @@ export(mapReactomePathwaysUnderOrganism)
 export(getStringNeighbours)
 export(makeCanonicalCorrelationAnalysis)
 export(plotCanonicalCorrelationAnalysisResults)
+export(makePartialLeastSquaresRegression)
+export(plotRmsepForPLS)
+export(plotRegression)
+
 
 # DEV Exports.
 export(readWithoutDuplicates)
