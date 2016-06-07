@@ -4,6 +4,10 @@
 #o. Clear R console.
 cat("\014")
 
+# origin and upstream integration
+# https://help.github.com/articles/configuring-a-remote-for-a-fork/
+# https://help.github.com/articles/syncing-a-fork/
+
 #o. Load all libraries necessary to build package.
 setDeveloperEnvironment <- function() {
     install.packages('igraph')
@@ -30,6 +34,7 @@ setDeveloperEnvironment <- function() {
     biocLite('S4Vectors')
     biocLite('ChemmineR')
     biocLite('ChemmineOB')
+    biocLite("mygene")
 }
 source("http://bioconductor.org/biocLite.R") # Sources the biocLite.R installation script.
 biocLite("ChemmineR") # Installs the package.
