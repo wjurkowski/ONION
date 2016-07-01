@@ -11,7 +11,16 @@ LazyData: TRUE
 #: Packages which are imported throught NAMESPASE file. (ChemmineOB)
 Imports: RCurl, RJSONIO, XML, testthat, pls, corrplot, yacca, FRCC, httr, biomaRt, STRINGdb, BiocCheck, CCA, gridExtra, mygene
 #: Packages with this flow dependencies: A -> B -> C and A -> C should be on Depends list.
-Depends: igraph, ChebiAPI, plyr, ReactomeAPI
+Depends:
+    R (>= 3.3.0),
+    igraph,
+    ChebiAPI,
+    plyr,
+    ReactomeAPI
+Suggests:
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
 Collate:
     'Utils.R'
     'ChebiReactomeOntology.R'

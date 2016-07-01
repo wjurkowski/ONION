@@ -1,14 +1,12 @@
-#Legend:
-#o - operative
 
-#o. Clear R console.
+# Clear R console.
 cat("\014")
 
 # origin and upstream integration
 # https://help.github.com/articles/configuring-a-remote-for-a-fork/
 # https://help.github.com/articles/syncing-a-fork/
 
-#o. Load all libraries necessary to build package.
+# Load all libraries necessary to build package.
 setDeveloperEnvironment <- function() {
     install.packages('igraph')
     install.packages('pls')
@@ -36,11 +34,42 @@ setDeveloperEnvironment <- function() {
     biocLite('ChemmineOB')
     biocLite("mygene")
 }
-source("http://bioconductor.org/biocLite.R") # Sources the biocLite.R installation script.
-biocLite("ChemmineR") # Installs the package.
-
 
 #TODO: Set up devtools to smart and fast builds.
+devtools::install_github("hadley/devtools")
+install.packages("rstudioapi")
+library(devtools)
+devtools::has_devel()
+sessionInfo()
+
+# BioConductor important steps.
+# IMPORTANT note : if some errors restart session or restard IDE!
+source("https://bioconductor.org/biocLite.R")
+library(BiocInstaller)
+BiocInstaller::useDevel()
+BiocInstaller::biocValid()
+BiocInstaller::biocLite()
+# R CMD BiocCheck
+biocLite("BiocCheck")
+library(BiocCheck)
+#Do BiocCheck on development version of package, not installed. :P
+BiocCheck("/home/koralgooll/doktorat/Rpackages/ONION")
+#Not this directory:
+find.package("ReactomeAPI")
+# KNOWN BUG
+#Failed to copy the script/BiocCheck script to /usr/lib/R/bin. If you want to be able to
+#run 'R CMD BiocCheck' you'll need to copy it yourself to a directory on your PATH, making
+#sure it is executable. See the BiocCheck vignette for more information.
+# SOLUTION
+find.package("BiocCheck")
+#Do what is in instruction. Copy that file please. :)
+
+# Build with vignetts.
+devtools::use_vignette(name = "ONIONnot")
+devtools::build_vignettes()
+devtools::build()
+devtools::build(binary = TRUE, args = c('--preclean'))
+devtools::install()
 
 #TODO: Continous delivery!
 
