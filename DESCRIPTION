@@ -3,7 +3,7 @@ Type: Package
 Title: ONION is a package implementing workflow for finding associations acrossomics data sets
 Version: 0.0.1
 Date: 2015-09-25
-Author: Wiktor Jurkowski wiktor.jurkowski@tgac.ac.uk; Monika Piwowar mpiwowar@cyf-kr.edu.pl
+Author: Wiktor Jurkowski wiktor.jurkowski@tgac.ac.uk; Monika Piwowar mpiwowar@cyf-kr.edu.pl; Ewa Gajda ewaa.gajda@gmail.com;
 Maintainer: Cezary Turek <cezary.turek@gmail.com>
 Description: Packacge description, what ONION does.
 License: GNU GPL
