@@ -18,13 +18,18 @@ test_that("NewOnionApiWorkflow test", {
     #given
     print('*********given*********')
     # Basic flow. Chebi -> Reactome -> String.
-    clasteredSmallMolecules <- ONION::clasterUsingOntology(pathToFile = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt",
+    pathToFileWithChebiIds <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
+    clasteredSmallMolecules <- ONION::clasterUsingOntology(pathToFile = pathToFileWithChebiIds,
                                 header = TRUE, ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
     head(clasteredSmallMolecules)
     mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clasteredSmallMolecules)
     head(mergedSmallMolecules)
     chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules, organismTaxonomyId = '9606')
     head(chebiIdsToReactomePathways)
+
+    chebiIdsToReactomePathwaysSmal <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[c("ontologyId")], organismTaxonomyId = '9606')
+    head(chebiIdsToReactomePathwaysSmall)
+
     chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(chebiIdsToReactomePathways)
     head(chebiIdsToReactomePathwaysAndToStringNeighbours)
 
@@ -45,11 +50,15 @@ test_that("NewOnionApiWorkflow test", {
         ]$stringGensSymbols[[1]]
     joinStringTrans <- c(stringTrans1, stringTrans2)[!duplicated(c(stringTrans1, stringTrans2))]
 
+
+    pathToExampleFileWithXData <- paste(find.package("ONION"),"/example/nm-transcriptomics.txt", sep = "")
+    pathToExampleFileWithYData <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
+
     ccaResults1 <- ONION::makeCanonicalCorrelationAnalysis(
-            joinRecatomeTrans,
-            joinLip,
-            pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-transcriptomics.txt",
-            pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt")
+        xNamesVector = joinRecatomeTrans,
+        yNamesVector = joinLip,
+            pathToFileWithXData = pathToExampleFileWithXData,
+            pathToFileWithYData = pathToExampleFileWithYData)
 
     ccaResults2 <- ONION::makeCanonicalCorrelationAnalysis(
         joinStringTrans,

@@ -1,0 +1,187 @@
+---
+title: "ONION"
+author: "Monika Piwowar, Wiktor Jurkowski, Ewa Gajda, Cezary Turek"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ONION}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+ONION is ...
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, include = TRUE)
+```
+
+# Table of Contents
+i. [Basic Flow](#basic-flow)
+  * 1. [INPUT data](#inpot-data)
+  * 2. [ChEBI Ontology](#chebi-ontology)
+  * 3. [Use Reactome](#use-reactome)
+  * 4. [Use STRING DB](#use-string-db)
+  * 5. [Statistical Analysis](#statistical-analysis)
+    * a. [CCA - Canonical Correlation Analysis](#cca---canonical-correlation-analysis)
+    * b. [PLS - Partial Least Squares Regression](#pls---partial-least-squares-regression)
+ii. [Methods in deatils](#methods-in-deatils)
+  * 1. [clasterUsingOntology()](#clasterusingontology())
+
+
+
+## Basic Flow
+
+### INPUT data
+
+To start work with ONION you need to build input files. Files contain tab delimited values with headers (colnames and rownames). Examples of both files you can find in directory \example under package insallation directory:  
+
+```{r, echo=FALSE, results='asis'}
+library(ONION)
+find.package("ONION")
+```
+
+Names of files are nm-transcriptomics.txt and nm-lipidomics.txt.
+
+
+### ChEBI Ontology
+
+As you can see in nm-lipidomics.txt first column has "ChEBI" header with chebi ids. You can use that file to create ontology table of chebis ids existing in Reactome. You can simply run that code:  
+`pathToFileWithChebiIds <- paste(find.package("ONION"),"/example/nm-lipidomics-valid.txt", sep = "")
+clasteredSmallMolecules <- ONION::clasterUsingOntology(pathToFile = pathToFileWithChebiIds, header = TRUE, ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
+head(clasteredSmallMolecules)`  
+Results are presented below:
+
+```{r, echo=FALSE, results='asis'}
+clasteredSmallMolecules <- ONION::clasterUsingOntology(pathToFile = paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = ""),
+                                header = TRUE, ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
+knitr::kable(head(clasteredSmallMolecules, 6))
+```
+
+As you can see in table above we have "root"" column which include chebis ids from nm-lipidomics.txt file. If id exists in reactome it is surrounded by 1, if not but there is an alternative in the form of child or parent in ChEBI Ontology, ONION put its id under proper column. If we can not find root id and can not find any parent or child for it, ONION surround it by 0.  
+
+Next step is merge of children, roots and parents. For now we have only one method of merge, but you can simply develop yourself. Our function merge table with children favoring.  
+`ONION::mergeChEBIOntologyWithChildFavoring(clasteredSmallMolecules)`
+
+```{r, echo=FALSE, results='asis'}
+mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clasteredSmallMolecules)
+knitr::kable(head(mergedSmallMolecules, 6))
+```
+
+Results include ontologyId column which contains chebis ids using to next calculations. Root column show from which point we start ontology search. In whoWins you can find R, C, P, N letters which mean Root, Child, Parent, None.
+
+
+### Use Reactome
+If you have result table of merge operation, then you can use it to find gens which are in the same pathway with chebi id. Actually we search only under Reactome database.  
+To do it just use method `ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules, organismTaxonomyId = '9606')`  
+Additionally instead of using dataframe from merge result (mergedSmallMolecules) you can use any dataframe with one required column "ontologyId" for example:
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(data.frame(mergedSmallMolecules[1:4, c("ontologyId"), drop = FALSE], XYZ = c("X","Y","X","Z")))
+```
+
+As a result you recive dataframe presented below:
+
+```{r, echo=FALSE, results='hide'}
+chebiIdsToReactomePathways <- invisible(ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[, c("ontologyId"), drop = FALSE], organismTaxonomyId = '9606'))
+```
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(chebiIdsToReactomePathways, 2))
+```
+
+
+### Use STRING DB
+
+When you have results from Reactome step, then you are ready to use STRING DB step. In this part you search for any extra interactions of gens which you find in Reactome. STRING calls them neighbours. To do it just put results achived from Reactome to `ONION::getStringNeighbours(chebiIdsToReactomePathways)` method. This function produce dataframe. Below one row of this this dataframe is presented:
+
+```{r, echo=FALSE, results='hide'}
+chebiIdsToReactomePathwaysAndToStringNeighbours <- invisible(ONION::getStringNeighbours(chebiIdsToReactomePathways))
+```
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == "27432",])
+```
+
+As you can see, this dataframe contains additional columns as stringIds and stringGensSymbols. All of theme are from STRING database and has some edges (connections) with gens from ensembleIds column.
+
+
+### Statistical Analysis
+
+This step joins files with data to analyse with results of Reactome step and/or results of STRING step. ONION provides two statistical methods to analyse those data:
+
+- CCA - CanonicalCorrelationAnalysis
+- PLS - Partial Least Squares Regression
+
+
+#### CCA - Canonical Correlation Analysis
+
+Please analyse script which is pased below. It is an esest option to show you how CCA works.  
+`ONION::makeCanonicalCorrelationAnalysis(xNamesVector = joinRecatomeTrans, yNamesVector = joinLip, pathToFileWithXData = pathToExampleFileWithXData, pathToFileWithYData = pathToExampleFileWithXData)`.  
+Where joinRecatomeTrans is `reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 27432,]$gensSymbols[[1]] reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 17351,]$gensSymbols[[1]] joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]`  
+and joinLip `lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == 27432,]$root lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == 17351,]$root joinLip <- c(lip1, lip2)`.  
+Two last arguments are paths to files in example directory. `pathToExampleFileWithXData <- paste(find.package("ONION"),"/example/nm-transcriptomics.txt", sep = "") pathToExampleFileWithYData <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")`  
+You can plot nice results of CCA by invoking `plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)` on CCA results.  
+First plot base on data achived from Reactome, secound plot base on data achived from STRING.
+
+
+```{r, echo=FALSE, results='hide'}
+lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == 27432,]$root
+lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == 17351,]$root
+joinLip <- c(lip1, lip2)
+reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 27432,]$gensSymbols[[1]]
+reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 17351,]$gensSymbols[[1]]
+joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]
+stringTrans1 <- chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == 27432,]$stringGensSymbols[[1]]
+stringTrans2 <- chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == 17351,]$stringGensSymbols[[1]]
+joinStringTrans <- c(stringTrans1, stringTrans2)[!duplicated(c(stringTrans1, stringTrans2))]
+pathToExampleFileWithXData <- paste(find.package("ONION"),"/example/nm-transcriptomics.txt", sep = "")
+pathToExampleFileWithYData <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
+ccaResults1 <- ONION::makeCanonicalCorrelationAnalysis(xNamesVector = joinRecatomeTrans, yNamesVector = joinLip, pathToFileWithXData = pathToExampleFileWithXData, pathToFileWithYData = pathToExampleFileWithYData)
+ccaResults2 <- ONION::makeCanonicalCorrelationAnalysis(joinStringTrans, joinLip, pathToFileWithXData = pathToExampleFileWithXData, pathToFileWithYData = pathToExampleFileWithYData)
+```
+
+```{r, fig.show='hold', fig.width=6, fig.height=6}
+plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
+```  
+
+```{r, fig.show='hold', fig.width=6, fig.height=6}
+plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults2)
+```
+
+
+#### PLS - Partial Least Squares Regression
+`ONION::makePartialLeastSquaresRegression()` methods is used in the same way like `ONION::makeCanonicalCorrelationAnalysis()`.  
+It has two additional arguments treiningTestBoundary = 0.85, ncompValue = 10, which have presented default values. Firs one divide set into training and test sets (1 = 100% for training set, 0.85 = 85% of data are assigned to trainig set and the rest of to test set (25%)). ncompValue set ncomp in predict method from PLS package.  
+To access results from PLS you have to use "training", "test"" or "testRmsep" on result list by using \$.  
+ONION also delivers two plot methods, first of them shows RMSEP `ONION::plotRmsepForPLS(PLSResult1$training)`.  
+Second plot regression base on training set `ONION::plotRegression(PLSResult1$training, ncompValue = 10)`.  
+Plots below presents plotRmsepForPLS for Reactome and STRING data.  
+3rd and 4th represents plotRegression method on the same results.
+
+```{r, echo=FALSE, results='hide'}
+PLSResult1 <- ONION::makePartialLeastSquaresRegression(joinRecatomeTrans, joinLip, pathToFileWithXData = pathToExampleFileWithXData, pathToFileWithYData = pathToExampleFileWithYData)
+PLSResult2 <- ONION::makePartialLeastSquaresRegression(joinStringTrans, joinLip, pathToFileWithXData = pathToExampleFileWithXData, pathToFileWithYData = pathToExampleFileWithYData)
+```
+
+```{r, fig.show='hold', fig.width=6, fig.height=6}
+ONION::plotRmsepForPLS(PLSResult1$training)
+ONION::plotRmsepForPLS(PLSResult2$training)
+```  
+
+```{r, fig.show='hold', fig.width=6, fig.height=6}
+ONION::plotRegression(PLSResult1$training, ncompValue = 10)
+ONION::plotRegression(PLSResult2$training, ncompValue = 10)
+```
+
+
+
+## Methods in deatils
+
+### clasterUsingOntology()
+ONION::clasterUsingOntology(pathToFile, header=TRUE, ontologyRepresentatnion)
+
+- pathToFile - path to file which has as firs column ChEBI ids to futher analysis.
+- header - TRUE if file include header, FALSE if not.
+- ontologyRepresentatnion - callback which is use to set proper ontology.
+
+
