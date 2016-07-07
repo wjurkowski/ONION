@@ -182,10 +182,12 @@ makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFr
     cca.fit
 }
 
+
 # NEW PUBLIC API
 plotCanonicalCorrelationAnalysisResults <- function(ccaResults, x.name = "xLabel", y.name = "yLabel") {
     helio.plot(ccaResults, x.name = "xLabel", y.name = "yLabel")
 }
+
 
 # NEW PUBLIC API
 makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
@@ -223,11 +225,14 @@ makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
     PLSResults
 }
 
+
 # NEW PUBLIC API
 plotRmsepForPLS <- function(PLSResult) {
     plot(pls::RMSEP(PLSResult), legendpos = "topright")
 }
 
+
+# NEW PUBLIC API
 plotRegression <- function(PLSResult, ncompValue) {
     plot(PLSResult, ncomp = ncompValue, asp = 1, line = TRUE)
 }
@@ -245,4 +250,10 @@ makePLSCharts <- function(PLS) {
         biplot(PLS, which = "scores")
         biplot(PLS, which = "loadings")
     dev.off()
+}
+
+
+# NEW PUBLIC API
+createFunctionalInteractionsDataFrame <- function(PLSResult) {
+
 }
