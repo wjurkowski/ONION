@@ -19,8 +19,10 @@ test_that("NewOnionApiWorkflow test", {
     print('*********given*********')
     # Basic flow. Chebi -> Reactome -> String.
     pathToFileWithChebiIds <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
-    clasteredSmallMolecules <- ONION::clasterUsingOntology(pathToFile = pathToFileWithChebiIds,
-                                header = TRUE, ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
+    baseData <- read.table(pathToFileWithChebiIds, header = TRUE)
+    #Filtering, analiza składowych, zmiana kolumn DF w baseData.
+    clasteredSmallMolecules <- ONION::clasterUsingOntology(chebiIdsDataFrame = baseData,
+                                ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
     head(clasteredSmallMolecules)
     mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clasteredSmallMolecules)
     head(mergedSmallMolecules)
@@ -54,17 +56,20 @@ test_that("NewOnionApiWorkflow test", {
     pathToExampleFileWithXData <- paste(find.package("ONION"),"/example/nm-transcriptomics.txt", sep = "")
     pathToExampleFileWithYData <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
 
+    XDF <- read.table(pathToExampleFileWithXData, header = TRUE);
+    YDF <- read.table(pathToExampleFileWithYData, header = TRUE);
+
     ccaResults1 <- ONION::makeCanonicalCorrelationAnalysis(
         xNamesVector = joinRecatomeTrans,
         yNamesVector = joinLip,
-            pathToFileWithXData = pathToExampleFileWithXData,
-            pathToFileWithYData = pathToExampleFileWithYData)
+            XDataFrame = XDF,
+            YDataFrame = YDF)
 
     ccaResults2 <- ONION::makeCanonicalCorrelationAnalysis(
         joinStringTrans,
         joinLip,
-        pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-transcriptomics.txt",
-        pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt")
+        XDataFrame = XDF,
+        YDataFrame = YDF)
 
     plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
 
@@ -74,14 +79,14 @@ test_that("NewOnionApiWorkflow test", {
     PLSResult1 <- ONION::makePartialLeastSquaresRegression(
         joinRecatomeTrans,
         joinLip,
-        pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-transcriptomics.txt",
-        pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt")
+        XDataFrame = XDF,
+        YDataFrame = YDF)
 
     PLSResult2 <- ONION::makePartialLeastSquaresRegression(
         joinStringTrans,
         joinLip,
-        pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-transcriptomics.txt",
-        pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt")
+        XDataFrame = XDF,
+        YDataFrame = YDF)
 
 
 

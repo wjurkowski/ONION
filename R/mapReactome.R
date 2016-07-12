@@ -1,8 +1,7 @@
 
 # NEW PUBLIC API:
-clasterUsingOntology <- function(pathToFile, header=TRUE, ontologyRepresentatnion) {
-    baseData <- read.table(pathToFile, header)
-    ontologyDataFrame <- ontologyRepresentatnion(baseData)
+clasterUsingOntology <- function(chebiIdsDataFrame, ontologyRepresentatnion) {
+    ontologyDataFrame <- ontologyRepresentatnion(chebiIdsDataFrame)
     ontologyDataFrame
 }
 
@@ -158,11 +157,11 @@ constans <- list(
 
 
 # NEW API CCA
-makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, pathToFileWithXData, pathToFileWithYData) {
+makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFrame, YDataFrame) {
 
     # Where XData = transcriptomicsData and YData = lipidomicsData.
-    XData <- readWithoutDuplicates(pathToFileWithXData)
-    YData <- readWithoutDuplicates(pathToFileWithYData)
+    XData <- data.frame(XDataFrame[!duplicated(XDataFrame[1]), ], row.names = 1)
+    YData <- data.frame(YDataFrame[!duplicated(YDataFrame[1]), ], row.names = 1)
 
     transposedXData <- as.data.frame(t(XData))
     transposedYData <- as.data.frame(t(YData))
@@ -183,18 +182,20 @@ makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, pathToF
     cca.fit
 }
 
+
 # NEW PUBLIC API
 plotCanonicalCorrelationAnalysisResults <- function(ccaResults, x.name = "xLabel", y.name = "yLabel") {
     helio.plot(ccaResults, x.name = "xLabel", y.name = "yLabel")
 }
 
+
 # NEW PUBLIC API
-makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector
-                                              , pathToFileWithXData, pathToFileWithYData
-                                              , treiningTestBoundary = 0.85, ncompValue = 10) {
+makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
+                                              XDataFrame, YDataFrame,
+                                              treiningTestBoundary = 0.85, ncompValue = 10) {
     # Where XData = transcriptomicsData and YData = lipidomicsData.
-    XData <- readWithoutDuplicates(pathToFileWithXData)
-    YData <- readWithoutDuplicates(pathToFileWithYData)
+    XData <- data.frame(XDataFrame[!duplicated(XDataFrame[1]), ], row.names = 1)
+    YData <- data.frame(YDataFrame[!duplicated(YDataFrame[1]), ], row.names = 1)
 
     transposedXData <- as.data.frame(t(XData))
     transposedYData <- as.data.frame(t(YData))
@@ -224,73 +225,23 @@ makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector
     PLSResults
 }
 
+
 # NEW PUBLIC API
 plotRmsepForPLS <- function(PLSResult) {
     plot(pls::RMSEP(PLSResult), legendpos = "topright")
 }
 
+
+# NEW PUBLIC API
 plotRegression <- function(PLSResult, ncompValue) {
     plot(PLSResult, ncomp = ncompValue, asp = 1, line = TRUE)
 }
 
+# TODO: Analiza różnicowa, differencial analysis.
 
-# TODO: Refactor PLS.
-#Analiza różnicowa, differencial analysis.
-getOnlyDataMachedInBothSets <- function(vectorOfMoleculesIds, pathToFileWithExperimentalData) {
-    transcriptomicsData <- readWithoutDuplicates(pathToFileWithExperimentalData)
-    X <- as.matrix(t(transcriptomicsData))
-    matchedGensData <- match(vectorOfMoleculesIds, colnames(X))
-    factorOfMatchedGensData <- factor(matchedGensData)
-    machedX <- X[,as.numeric(levels(factorOfMatchedGensData))]
-    machedXMatrix <- convertNumericToMatrix(machedX)
-    machedXMatrix
-}
+# TODO: Check exceptions hadling in methods.
 
-convertNumericToMatrix <- function(matrixOrNumericClass) {
-    if (is.matrix(matrixOrNumericClassX)) {
-        machedX <- matrixOrNumericClass
-    } else {
-        machedX <- matrix(matrixOrNumericClass)
-    }
-    machedX
-}
-
-makePLSOnData <- function(vectorOfChebiIds, vectorOfHgncSymbols,
-                          pathToFileWithTranscriptomicsData, pathToFileWithLipidomicsData) {
-    machedXMatrix <- getOnlyDataMachedInBothSets(vectorOfHgncSymbols, pathToFileWithTranscriptomicsData)
-    machedYMatrix <- getOnlyDataMachedInBothSets(vectorOfChebiIds, pathToFileWithLipidomicsData)
-
-    PLSResults <- tryCatch(
-        {
-            Xmelt <- I(as.matrix(machedXMatrix))
-            Ymelt <- I(as.matrix(machedYMatrix))
-            realData = list(Xmelt,Ymelt)
-            # Coefficiens - what should be, or what type of arguments?
-            #, ncomp=as.numeric("10")
-            plsr(Y ~ X, data = realData, validation="LOO")
-        },
-        error=function(cond) {
-            message("ONION - PLS fail, it can not solve problem.")
-            message("Original message (PLS):")
-            message(cond)
-            # Choose a return value in case of error
-            return(NA)
-        },
-        warning=function(cond) {
-            message("ONION - PLS fail, it can not solve problem.")
-            message("Original message (PLS):")
-            message(cond)
-            # Choose a return value in case of warning
-            return(NULL)
-        },
-        finally={
-            message("ONION - PLS finished with success.")
-        }
-    )
-
-    PLSResults
-}
-
+# TODO: Check plots. :)
 makePLSCharts <- function(PLS) {
     png("PLS_loadings.png", width = 640, height = 480)
         par(mfrow = c(2,2))
@@ -299,4 +250,10 @@ makePLSCharts <- function(PLS) {
         biplot(PLS, which = "scores")
         biplot(PLS, which = "loadings")
     dev.off()
+}
+
+
+# NEW PUBLIC API
+createFunctionalInteractionsDataFrame <- function(PLSResult) {
+
 }
