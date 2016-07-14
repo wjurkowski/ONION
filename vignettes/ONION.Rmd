@@ -25,7 +25,7 @@ i. [Basic Flow](#basic-flow)
     * a. [CCA - Canonical Correlation Analysis](#cca---canonical-correlation-analysis)
     * b. [PLS - Partial Least Squares Regression](#pls---partial-least-squares-regression)
 ii. [Methods in deatils](#methods-in-deatils)
-  * 1. [clasterUsingOntology()](#clasterusingontology())
+  * 1. [clusterUsingOntology()](#clusterusingontology())
 
 
 
@@ -47,23 +47,23 @@ Names of files are nm-transcriptomics.txt and nm-lipidomics.txt.
 
 As you can see in nm-lipidomics.txt first column has "ChEBI" header with chebi ids. You can use that file to create ontology table of chebis ids existing in Reactome. You can simply run that code:  
 `pathToFileWithChebiIds <- paste(find.package("ONION"),"/example/nm-lipidomics-valid.txt", sep = "")
-clasteredSmallMolecules <- ONION::clasterUsingOntology(pathToFile = pathToFileWithChebiIds, header = TRUE, ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
-head(clasteredSmallMolecules)`  
+clusteredSmallMolecules <- ONION::clusterUsingOntology(pathToFile = pathToFileWithChebiIds, header = TRUE, ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
+head(clusteredSmallMolecules)`  
 Results are presented below:
 
 ```{r, echo=FALSE, results='asis'}
-clasteredSmallMolecules <- ONION::clasterUsingOntology(pathToFile = paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = ""),
+clusteredSmallMolecules <- ONION::clusterUsingOntology(pathToFile = paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = ""),
                                 header = TRUE, ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
-knitr::kable(head(clasteredSmallMolecules, 6))
+knitr::kable(head(clusteredSmallMolecules, 6))
 ```
 
 As you can see in table above we have "root"" column which include chebis ids from nm-lipidomics.txt file. If id exists in reactome it is surrounded by 1, if not but there is an alternative in the form of child or parent in ChEBI Ontology, ONION put its id under proper column. If we can not find root id and can not find any parent or child for it, ONION surround it by 0.  
 
 Next step is merge of children, roots and parents. For now we have only one method of merge, but you can simply develop yourself. Our function merge table with children favoring.  
-`ONION::mergeChEBIOntologyWithChildFavoring(clasteredSmallMolecules)`
+`ONION::mergeChEBIOntologyWithChildFavoring(clusteredSmallMolecules)`
 
 ```{r, echo=FALSE, results='asis'}
-mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clasteredSmallMolecules)
+mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clusteredSmallMolecules)
 knitr::kable(head(mergedSmallMolecules, 6))
 ```
 
@@ -177,8 +177,8 @@ ONION::plotRegression(PLSResult2$training, ncompValue = 10)
 
 ## Methods in deatils
 
-### clasterUsingOntology()
-ONION::clasterUsingOntology(pathToFile, header=TRUE, ontologyRepresentatnion)
+### clusterUsingOntology()
+ONION::clusterUsingOntology(pathToFile, header=TRUE, ontologyRepresentatnion)
 
 - pathToFile - path to file which has as firs column ChEBI ids to futher analysis.
 - header - TRUE if file include header, FALSE if not.

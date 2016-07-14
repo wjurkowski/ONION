@@ -21,13 +21,16 @@ test_that("NewOnionApiWorkflow test", {
     pathToFileWithChebiIds <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
     baseData <- read.table(pathToFileWithChebiIds, header = TRUE)
     #Filtering, analiza składowych, zmiana kolumn DF w baseData.
-    clasteredSmallMolecules <- ONION::clasterUsingOntology(chebiIdsDataFrame = baseData,
+    clusteredSmallMolecules <- ONION::clusterUsingOntology(chebiIdsDataFrame = baseData,
                                 ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
-    head(clasteredSmallMolecules)
-    mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clasteredSmallMolecules)
+    head(clusteredSmallMolecules)
+    mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clusteredSmallMolecules)
     head(mergedSmallMolecules)
     chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules, organismTaxonomyId = '9606')
     head(chebiIdsToReactomePathways)
+
+    functionalInteractions <- ONION::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
+    head(functionalInteractions)
 
     chebiIdsToReactomePathwaysSmal <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[c("ontologyId")], organismTaxonomyId = '9606')
     head(chebiIdsToReactomePathwaysSmall)
