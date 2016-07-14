@@ -20,7 +20,7 @@ import(gridExtra)
 import(CCA)
 
 # Export NEW PUBLIC API
-export(clasterUsingOntology)
+export(clusterUsingOntology)
 export(firstExistsInReactomeChebiOntology)
 export(mergeChEBIOntologyWithChildFavoring)
 export(mapReactomePathwaysUnderOrganism)

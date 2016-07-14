@@ -1,6 +1,6 @@
 
 # NEW PUBLIC API:
-clasterUsingOntology <- function(chebiIdsDataFrame, ontologyRepresentatnion) {
+clusterUsingOntology <- function(chebiIdsDataFrame, ontologyRepresentatnion) {
     ontologyDataFrame <- ontologyRepresentatnion(chebiIdsDataFrame)
     ontologyDataFrame
 }
@@ -254,6 +254,18 @@ makePLSCharts <- function(PLS) {
 
 
 # NEW PUBLIC API
-createFunctionalInteractionsDataFrame <- function(PLSResult) {
-
+createFunctionalInteractionsDataFrame <- function(chebiToReactomeDataFrame) {
+    functionalInteractionsDataFrame <- ddply(.data = chebiIdsToReactomePathways, .(chebiId), .fun = function(dfElement) {
+        functionalInteractionsRows <- adply(.data = dfElement$ensembleIds[[1]], .margins = 1, dfff = dfff, .fun = function(listElement, dfff) {
+            functionalInteractionsRow <- data.frame("Gene1" = dfElement$chebiId,
+                               "Gene2" = listElement,
+                               "Annotation" = "reactome",
+                               "Direction" = "-",
+                               "Score" = 1.00,
+                               stringsAsFactors = FALSE)
+            functionalInteractionsRow
+        })
+        functionalInteractionsRows
+    })
+    functionalInteractionsDataFrame[,c("Gene1", "Gene2", "Annotation", "Direction", "Score")]
 }
