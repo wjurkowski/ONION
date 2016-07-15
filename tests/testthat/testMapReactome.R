@@ -24,15 +24,17 @@ test_that("NewOnionApiWorkflow test", {
     clusteredSmallMolecules <- ONION::clusterUsingOntology(chebiIdsDataFrame = baseData,
                                 ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
     head(clusteredSmallMolecules)
+
     mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clusteredSmallMolecules)
     head(mergedSmallMolecules)
+
     chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules, organismTaxonomyId = '9606')
     head(chebiIdsToReactomePathways)
 
     functionalInteractions <- ONION::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
     head(functionalInteractions)
 
-    chebiIdsToReactomePathwaysSmal <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[c("ontologyId")], organismTaxonomyId = '9606')
+    chebiIdsToReactomePathwaysSmall <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[c("ontologyId")], organismTaxonomyId = '9606')
     head(chebiIdsToReactomePathwaysSmall)
 
     chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(chebiIdsToReactomePathways)

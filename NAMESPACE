@@ -1,6 +1,5 @@
 #Has few conflicts in methods.
-#Use importFrom, will remove warnings.
-import(biomaRt)
+# TODO : Use importFrom, will remove warnings.
 import(pls)
 import(corrplot)
 import(yacca)

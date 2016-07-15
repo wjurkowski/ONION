@@ -9,20 +9,20 @@ Description: Packacge description, what ONION does.
 License: GNU GPL
 LazyData: TRUE
 #: Packages which are imported throught NAMESPASE file. (ChemmineOB)
-Imports: RCurl, RJSONIO, XML, testthat, pls, corrplot, yacca, FRCC, httr, biomaRt, STRINGdb, BiocCheck, CCA, gridExtra, mygene
+Imports: RCurl, RJSONIO, XML, testthat, pls, corrplot, yacca, FRCC, httr, STRINGdb, BiocCheck, CCA, gridExtra, mygene
 #: Packages with this flow dependencies: A -> B -> C and A -> C should be on Depends list.
 Depends:
     R (>= 3.3.0),
     igraph,
-    ChebiAPI,
-    plyr,
-    ReactomeAPI
+    plyr
 Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
 Collate:
     'Utils.R'
+    'Reactome.R'
+    'Chebi.R'
     'ChebiReactomeOntology.R'
     'SimilarityClustering.R'
-    'mapReactome.R'
+    'MapReactome.R'

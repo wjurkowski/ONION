@@ -3,20 +3,20 @@ firstExistsInReactomeChebiOntology <- function(baseData) {
     firstExistsInReactomeChebiOntologyDataFrame <- ldply(baseData$ChEBI, function(dataRow) {
         child <- 0
         parent <- 0
-        if (ReactomeAPI::checkIfPathwayIdExistsForChEBIId(dataRow)) {
+        if (checkIfPathwayIdExistsForChEBIId(dataRow)) {
             child <- 1
             parent <- 1
         } else {
-            children <- ChebiAPI::getChEBIOntologyChildren(dataRow)
-            parents <- ChebiAPI::getChEBIOntologyParents(dataRow)
+            children <- getChEBIOntologyChildren(dataRow)
+            parents <- getChEBIOntologyParents(dataRow)
             for (i in 1:nrow(children)) {
-                if (ReactomeAPI::checkIfPathwayIdExistsForChEBIId(as.character(children[i, ]$chebiId))) {
+                if (checkIfPathwayIdExistsForChEBIId(as.character(children[i, ]$chebiId))) {
                     child <- as.character(children[i, ]$chebiId)
                     break
                 }
             }
             for (i in 1:nrow(parents)) {
-                if (ReactomeAPI::checkIfPathwayIdExistsForChEBIId(as.character(parents[i, ]$chebiId))) {
+                if (checkIfPathwayIdExistsForChEBIId(as.character(parents[i, ]$chebiId))) {
                     parent <- as.character(parents[i, ]$chebiId)
                     break
                 }

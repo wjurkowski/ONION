@@ -9,8 +9,8 @@ clusterUsingOntology <- function(chebiIdsDataFrame, ontologyRepresentatnion) {
 # NEW PUBLIC API:
 mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyId='9606') {
     chebiIdsToEnsembleIds <- ldply(.data = chebiOntologyIds$ontologyId, .fun = function(vectorElement) {
-        pathwayIds <- ReactomeAPI::getPathwaysIdsForChebiUnderOrganism(vectorElement, taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
-        ensembleIds <- ReactomeAPI::getEnsemblIdsForPathwayIds(pathwayIds)
+        pathwayIds <- getPathwaysIdsForChebiUnderOrganism(vectorElement, taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
+        ensembleIds <- getEnsemblIdsForPathwayIds(pathwayIds)
         gensSymbols <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
         chebiIdToEnsembleIds <- data.frame('chebiId' = as.character(vectorElement)
                                            , 'ensembleIds' = I(list(ensembleIds))
