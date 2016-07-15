@@ -9,16 +9,20 @@ firstExistsInReactomeChebiOntology <- function(baseData) {
         } else {
             children <- getChEBIOntologyChildren(dataRow)
             parents <- getChEBIOntologyParents(dataRow)
-            for (i in 1:nrow(children)) {
-                if (checkIfPathwayIdExistsForChEBIId(as.character(children[i, ]$chebiId))) {
-                    child <- as.character(children[i, ]$chebiId)
-                    break
+            if (nrow(children) >= 1) {
+                for (i in 1:nrow(children)) {
+                    if (checkIfPathwayIdExistsForChEBIId(as.character(children[i, ]$chebiId))) {
+                        child <- as.character(children[i, ]$chebiId)
+                        break
+                    }
                 }
             }
-            for (i in 1:nrow(parents)) {
-                if (checkIfPathwayIdExistsForChEBIId(as.character(parents[i, ]$chebiId))) {
-                    parent <- as.character(parents[i, ]$chebiId)
-                    break
+            if (nrow(parents) >= 1) {
+                for (i in 1:nrow(parents)) {
+                    if (checkIfPathwayIdExistsForChEBIId(as.character(parents[i, ]$chebiId))) {
+                        parent <- as.character(parents[i, ]$chebiId)
+                        break
+                    }
                 }
             }
         }

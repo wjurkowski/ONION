@@ -41,19 +41,20 @@ test_that("NewOnionApiWorkflow test", {
     head(chebiIdsToReactomePathwaysAndToStringNeighbours)
 
     # JOIN on input data and Reactome result, String results.
+    # INFO : Be careful Ewa with 73705 -> 16015. Look at clusteredSmallMolecules and mergedSmallMolecules.
     lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == 27432,]$root
-    lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == 17351,]$root
+    lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == 73705,]$root
     joinLip <- c(lip1, lip2)
 
     reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 27432,]$gensSymbols[[1]]
-    reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 17351,]$gensSymbols[[1]]
+    reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 16015,]$gensSymbols[[1]]
     joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]
 
     stringTrans1 <- chebiIdsToReactomePathwaysAndToStringNeighbours[
             chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == 27432,
         ]$stringGensSymbols[[1]]
     stringTrans2 <- chebiIdsToReactomePathwaysAndToStringNeighbours[
-            chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == 17351,
+            chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == 16015,
         ]$stringGensSymbols[[1]]
     joinStringTrans <- c(stringTrans1, stringTrans2)[!duplicated(c(stringTrans1, stringTrans2))]
 
