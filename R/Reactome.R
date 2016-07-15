@@ -128,6 +128,12 @@ getEnsemblIdsForPathwayId <- function(pathwayId) {
     as.character(matchingEnsemblsToPathway$V1)
 }
 
+# NEW
+getUniProtIdsForPathwayId <- function(pathwayId) {
+    matchingEnsemblsToPathway <- UniProt2ReactomeLowestLevel[grep(pathwayId, UniProt2ReactomeLowestLevel$V2),]
+    as.character(matchingEnsemblsToPathway$V1)
+}
+
 # TOTALY NEW
 getEnsemblIdsForPathwayIds <- function(vectorOfPAthwayIds) {
     ensembleIdsList <- alply(.data = vectorOfPAthwayIds, .fun = function(vectorElement) {
@@ -135,6 +141,15 @@ getEnsemblIdsForPathwayIds <- function(vectorOfPAthwayIds) {
     }, .margins = 1)
     ensembreIdsVector <- as.character(unique(unlist(ensembleIdsList, recursive = TRUE)))
     ensembreIdsVector
+}
+
+# TOTALY NEW
+getUniProtIdsForPathwayIds <- function(vectorOfPAthwayIds) {
+    uniProtIdsList <- alply(.data = vectorOfPAthwayIds, .fun = function(vectorElement) {
+        getUniProtIdsForPathwayId(vectorElement)
+    }, .margins = 1)
+    uniProtIdsVector <- as.character(unique(unlist(uniProtIdsList, recursive = TRUE)))
+    uniProtIdsVector
 }
 
 #OLD

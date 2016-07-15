@@ -23,11 +23,6 @@ getChEBIOntologyChildren <- function(ChEBIId) {
     ChEBIOntologhyChildren
 }
 
-getFirstChEBIOntologyChild <- function(ChEBIId) {
-    ontologyChildren <- getChEBIOntologyChildren(ChEBIId = ChEBIId)
-    ontologyChildren[1,]
-}
-
 getChEBIOntologyParents <- function(ChEBIId) {
     headerFields = c(Accept = "text/xml", Accept = "multipart/*", 'Content-Type' = "text/xml; charset=utf-8", SOAPAction = "")
     body = paste0('<soapenv:Envelope
@@ -50,9 +45,4 @@ getChEBIOntologyParents <- function(ChEBIId) {
         df
     })
     ChEBIOntologhyParents
-}
-
-getFirstChEBIOntologyParent <- function(ChEBIId) {
-    ontologyParents <- getChEBIOntologyParents(ChEBIId = ChEBIId)
-    ontologyParents[1,]
 }
