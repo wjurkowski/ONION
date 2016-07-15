@@ -11,11 +11,15 @@ mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyI
     chebiIdsToEnsembleIds <- ldply(.data = chebiOntologyIds$ontologyId, .fun = function(vectorElement) {
         pathwayIds <- getPathwaysIdsForChebiUnderOrganism(vectorElement, taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
         ensembleIds <- getEnsemblIdsForPathwayIds(pathwayIds)
+        uniProtIds <- getUniProtIdsForPathwayIds(pathwayIds)
         gensSymbols <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
+        gensSymbolsFromUniProt <- getSymbolsBaseOnUniProtIdsUsingMyGenePackage(uniProtIds, organismTaxonomyId = organismTaxonomyId)
         chebiIdToEnsembleIds <- data.frame('chebiId' = as.character(vectorElement)
                                            , 'ensembleIds' = I(list(ensembleIds))
+                                           , 'uniProtIds' = I(list(uniProtIds))
                                            , 'reactomeIds' = I(list(pathwayIds))
-                                           , 'gensSymbols' = I(list(gensSymbols)))
+                                           , 'gensSymbols' = I(list(gensSymbols))
+                                           , 'gensSymbolsFromUniProt' = I(list(gensSymbolsFromUniProt)))
         chebiIdToEnsembleIds
     })
     chebiIdsToEnsembleIds
@@ -103,6 +107,20 @@ getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage <- function(gensIdsVector, orga
     # genes$symbol
     # genes$ensembl.protein
     additionalInformationBaseOnEnsemblGenId <- queryMany(gensIdsVector, fields = c("symbol","ensembl.protein"),
+                                                         species = organismTaxonomyId)
+    equivalentEnsemlProteinsIdsVector <- unlist(
+        additionalInformationBaseOnEnsemblGenId$symbol[!is.na(additionalInformationBaseOnEnsemblGenId$symbol)]
+    )
+    equivalentEnsemlProteinsIdsVector <- as.character(equivalentEnsemlProteinsIdsVector)
+    equivalentEnsemlProteinsIdsVector
+}
+
+# NEW API.
+getSymbolsBaseOnUniProtIdsUsingMyGenePackage <- function(gensIdsVector, organismTaxonomyId) {
+    # genes <- getGenes(gensIdsVector, fields = "all")
+    # genes$symbol
+    # genes$ensembl.protein
+    additionalInformationBaseOnEnsemblGenId <- queryMany(gensIdsVector, scopes = 'uniprot', fields = c("symbol"),
                                                          species = organismTaxonomyId)
     equivalentEnsemlProteinsIdsVector <- unlist(
         additionalInformationBaseOnEnsemblGenId$symbol[!is.na(additionalInformationBaseOnEnsemblGenId$symbol)]
