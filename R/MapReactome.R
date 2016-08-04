@@ -8,18 +8,17 @@ clusterUsingOntology <- function(chebiIdsDataFrame, ontologyRepresentatnion) {
 
 # NEW PUBLIC API:
 mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyId='9606') {
-    chebiIdsToEnsembleIds <- ldply(.data = chebiOntologyIds$ontologyId, .fun = function(vectorElement) {
-        pathwayIds <- getPathwaysIdsForChebiUnderOrganism(vectorElement, taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
+    chebiIdsToEnsembleIds <- ddply(.data = chebiOntologyIds, .(ontologyId, root), .fun = function(vectorElement) {
+        pathwayIds <- getPathwaysIdsForChebiUnderOrganism(vectorElement[1,'ontologyId'], taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
         ensembleIds <- getEnsemblIdsForPathwayIds(pathwayIds)
         uniProtIds <- getUniProtIdsForPathwayIds(pathwayIds)
         gensSymbols <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
         gensSymbolsFromUniProt <- getSymbolsBaseOnUniProtIdsUsingMyGenePackage(uniProtIds, organismTaxonomyId = organismTaxonomyId)
-        chebiIdToEnsembleIds <- data.frame('chebiId' = as.character(vectorElement)
-                                           , 'ensembleIds' = I(list(ensembleIds))
-                                           , 'uniProtIds' = I(list(uniProtIds))
-                                           , 'reactomeIds' = I(list(pathwayIds))
-                                           , 'gensSymbols' = I(list(gensSymbols))
-                                           , 'gensSymbolsFromUniProt' = I(list(gensSymbolsFromUniProt)))
+        chebiIdToEnsembleIds <- data.frame('ensembleIds' = I(list(ensembleIds)),
+                                           'uniProtIds' = I(list(uniProtIds)),
+                                           'reactomeIds' = I(list(pathwayIds)),
+                                           'gensSymbols' = I(list(gensSymbols)),
+                                           'gensSymbolsFromUniProt' = I(list(gensSymbolsFromUniProt)))
         chebiIdToEnsembleIds
     })
     chebiIdsToEnsembleIds
@@ -52,8 +51,8 @@ taxonIdToReactomeCodes[['9823']] <- list(speciesName='Sus scrofa', speciesCode='
 # NEW PUBLIC API
 getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9606, stringDbVersion = "10") {
     string_db <- STRINGdb$new( version = stringDbVersion, species = stringOrganismId)
-    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways$chebiId == 0, ]
-    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, .(chebiId), .fun = function(dfElement) {
+    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways$ontologyId == 0, ]
+    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, .(ontologyId, root), .fun = function(dfElement) {
         returnNeighbourVector <- character(length = 0)
         stringGensSymbols <- character(length = 0)
         if (0 == length(dfElement$ensembleIds[[1]])) {
@@ -66,9 +65,9 @@ getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9
             ensembleIdsFromStringDb <- mapFromStringIdsToEnsembleIds(returnNeighbourVector)
             stringGensSymbols <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDb, organismTaxonomyId = stringOrganismId)
         }
-        dffff <- data.frame('chebiId' = dfElement$chebiId, 'ensembleIds' = dfElement$ensembleIds[1],
-                            'stringIds' = I(list(unique(returnNeighbourVector)))
-                            , 'stringGensSymbols' = I(list(unique(stringGensSymbols))) )
+        dffff <- data.frame('ensembleIds' = dfElement$ensembleIds[1],
+                            'stringIds' = I(list(unique(returnNeighbourVector))),
+                            'stringGensSymbols' = I(list(unique(stringGensSymbols))) )
         dffff
     })
     dfWithString
@@ -145,33 +144,13 @@ getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage <- function(gensIdsVector, or
 }
 
 
-#TODO: NOW
-#Use Ensamble2Reactome.txt file
-#
-#Use this files:
-#UniProt to pathways mapping file
-#ChEBI to pathways mapping file
-#ENSEMBL to pathways mapping file
-#
-#Translate (Biomart, clusterProfilerBitR, myGene)
-#
-#
-#
-#TODO: FUTURE
-#http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/pathwayParticipants/109581
-#->
-#http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/queryById/entityWithAccessionedSequence/197679
-#->
-#ENSEMBLE,
-#
-#
-#
-constans <- list(
-    pseudoClasteringsFilters=list(
-        ensemblPeptideId="ensembl_peptide_id",
-        ensemblGeneId="ensembl_gene_id"
-    )
-)
+# NEW PUBLIC API
+groupUsingUserDefinition <- function(dfWithMapping, pathToFileWithGroupDefinition ) {
+    maxColLength <- max(count.fields(pathToFileWithGroupDefinition, sep = '\t'))
+    model <- read.table(file = pathToFileWithGroupDefinition, header = TRUE, fill = TRUE,
+                        stringsAsFactors = FALSE, sep = "\t", strip.white = TRUE)
+}
+
 
 
 # NEW API CCA
@@ -273,9 +252,9 @@ makePLSCharts <- function(PLS) {
 
 # NEW PUBLIC API
 createFunctionalInteractionsDataFrame <- function(chebiToReactomeDataFrame) {
-    functionalInteractionsDataFrame <- ddply(.data = chebiIdsToReactomePathways, .(chebiId), .fun = function(dfElement) {
+    functionalInteractionsDataFrame <- ddply(.data = chebiIdsToReactomePathways, .(ontologyId), .fun = function(dfElement) {
         functionalInteractionsRows <- adply(.data = dfElement$ensembleIds[[1]], .margins = 1, dfff = dfff, .fun = function(listElement, dfff) {
-            functionalInteractionsRow <- data.frame("Gene1" = dfElement$chebiId,
+            functionalInteractionsRow <- data.frame("Gene1" = dfElement$ontologyId,
                                "Gene2" = listElement,
                                "Annotation" = "reactome",
                                "Direction" = "-",
