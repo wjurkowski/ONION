@@ -40,6 +40,9 @@ test_that("NewOnionApiWorkflow test", {
     chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(chebiIdsToReactomePathways)
     head(chebiIdsToReactomePathwaysAndToStringNeighbours)
 
+    gmtGroupsFilePath <- paste(find.package("ONION"),"/example/nm-groups.txt", sep = "")
+    groups <- ONION::groupUsingUserDefinition(pathToFileWithGroupDefinition = gmtGroupsFilePath)
+
     # JOIN on input data and Reactome result, String results.
     # INFO : Be careful Ewa with 73705 -> 16015. Look at clusteredSmallMolecules and mergedSmallMolecules.
     lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == 27432,]$root

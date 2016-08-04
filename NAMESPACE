@@ -11,12 +11,12 @@ import(testthat)
 import(httr)
 import(XML)
 import(RJSONIO)
-# import(ChemmineR)
 import(plyr)
 import(mygene)
 import(gridExtra)
-# import(ChemmineOB)
 import(CCA)
+import(ChemmineR)
+import(ChemmineOB)
 
 # Export NEW PUBLIC API
 export(clusterUsingOntology)
@@ -24,6 +24,7 @@ export(firstExistsInReactomeChebiOntology)
 export(mergeChEBIOntologyWithChildFavoring)
 export(mapReactomePathwaysUnderOrganism)
 export(getStringNeighbours)
+export(groupUsingUserDefinition)
 export(makeCanonicalCorrelationAnalysis)
 export(plotCanonicalCorrelationAnalysisResults)
 export(makePartialLeastSquaresRegression)
@@ -39,7 +40,6 @@ export(createFunctionalInteractionsDataFrame)
 
 
 # Export CONST
-export(constans)
 export(taxonIdToReactomeCodes)
 # Fill it in future.
 exportClasses()
