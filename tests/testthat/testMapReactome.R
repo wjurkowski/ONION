@@ -20,9 +20,11 @@ test_that("NewOnionApiWorkflow test", {
     # Basic flow. Chebi -> Reactome -> String.
     pathToFileWithChebiIds <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
     baseData <- read.table(pathToFileWithChebiIds, header = TRUE)
+    head(baseData)
     #Filtering, analiza składowych, zmiana kolumn DF w baseData.
     clusteredSmallMolecules <- ONION::clusterUsingOntology(chebiIdsDataFrame = baseData,
-                                ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
+                                                           rootColumnName = "ChEBI",
+                                                           ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
     head(clusteredSmallMolecules)
 
     mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clusteredSmallMolecules)
@@ -36,6 +38,7 @@ test_that("NewOnionApiWorkflow test", {
 
     chebiIdsToReactomePathwaysSmall <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[c("ontologyId")], organismTaxonomyId = '9606')
     head(chebiIdsToReactomePathwaysSmall)
+
 
     chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(chebiIdsToReactomePathways)
     head(chebiIdsToReactomePathwaysAndToStringNeighbours)

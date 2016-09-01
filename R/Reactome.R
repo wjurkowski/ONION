@@ -106,14 +106,19 @@ UniProt2ReactomeLowestLevel <- read.table("resources/UniProt2Reactome.txt")
 
 #Additional (local) API methods
 checkIfPathwayIdExistsForChEBIId <- function(ChEBIId) {
-    #chEBIToReactomeLowestLevel <- read.table("resources/ChEBI2Reactome.txt")
-    #chEBIToReactomeLowestLevel[chEBIToReactomeLowestLevel$V1=="28842",]
-    matchingChEBIToReactome <- chEBIToReactomeLowestLevel[grep(ChEBIId, chEBIToReactomeLowestLevel$V1),]
-    if (nrow(matchingChEBIToReactome)) {
-        TRUE
-    } else {
+    print("checkIfPathwayIdExistsForChEBIId")
+    print(ChEBIId)
+    if (0 == length(ChEBIId)) {
         FALSE
+    } else {
+        matchingChEBIToReactome <- chEBIToReactomeLowestLevel[grep(ChEBIId, chEBIToReactomeLowestLevel$V1),]
+        if (nrow(matchingChEBIToReactome)) {
+            TRUE
+        } else {
+            FALSE
+        }
     }
+
 }
 
 # OLD

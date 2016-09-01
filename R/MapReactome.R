@@ -1,15 +1,25 @@
 
 # NEW PUBLIC API:
-clusterUsingOntology <- function(chebiIdsDataFrame, ontologyRepresentatnion) {
-    ontologyDataFrame <- ontologyRepresentatnion(chebiIdsDataFrame)
+clusterUsingOntology <- function(chebiIdsDataFrame, rootColumnName, ontologyRepresentatnion) {
+    ontologyDataFrame <- ontologyRepresentatnion(baseData = chebiIdsDataFrame, rootColumnName = rootColumnName)
     ontologyDataFrame
 }
 
 
 # NEW PUBLIC API:
-mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyId='9606') {
-    chebiIdsToEnsembleIds <- ddply(.data = chebiOntologyIds, .(ontologyId, root), .fun = function(vectorElement) {
-        pathwayIds <- getPathwaysIdsForChebiUnderOrganism(vectorElement[1,'ontologyId'], taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
+mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyId='9606', idsColumnName = 'ontologyId', rootColumnName = 'root') {
+    # x <- c("supp", "dose")
+    chebiIdsToEnsembleIds <- ddply(.data = chebiOntologyIds, c(idsColumnName, rootColumnName), .fun = function(vectorElement) {
+
+        print(as.character(vectorElement[1, c(idsColumnName)]))
+        idToCheck <- as.character(strsplit(as.character(vectorElement[1, c(idsColumnName)]), ":")[[1]][2])
+        print("idToCheck")
+        print(idToCheck)
+        if (is.na(idToCheck)) {
+            idToCheck <- as.character("0");
+            print(idToCheck)
+        }
+        pathwayIds <- getPathwaysIdsForChebiUnderOrganism(idToCheck, taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
         ensembleIds <- getEnsemblIdsForPathwayIds(pathwayIds)
         uniProtIds <- getUniProtIdsForPathwayIds(pathwayIds)
         gensSymbols <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
@@ -49,23 +59,23 @@ taxonIdToReactomeCodes[['9823']] <- list(speciesName='Sus scrofa', speciesCode='
 
 
 # NEW PUBLIC API
-getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9606, stringDbVersion = "10") {
+getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9606, stringDbVersion = "10", idsColumnName = 'ontologyId', rootColumnName = 'root', listOfEnsembleIdColumnName = 'ensembleIds') {
     string_db <- STRINGdb$new( version = stringDbVersion, species = stringOrganismId)
-    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways$ontologyId == 0, ]
-    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, .(ontologyId, root), .fun = function(dfElement) {
+    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways[idsColumnName] == 0, ]
+    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, c(idsColumnName, rootColumnName), .fun = function(dfElement) {
         returnNeighbourVector <- character(length = 0)
         stringGensSymbols <- character(length = 0)
-        if (0 == length(dfElement$ensembleIds[[1]])) {
+        if (0 == length(dfElement[1, listOfEnsembleIdColumnName][[1]])) {
         } else {
             proteinIds <- getEnsemblProteinsIdsBaseOnEnsemblGensIdsUsingMyGenePackage(
-                dfElement$ensembleIds, organismTaxonomyId = stringOrganismId
+                dfElement[1,listOfEnsembleIdColumnName], organismTaxonomyId = stringOrganismId
             )
             stringId1 <- string_db$mp(proteinIds)
             returnNeighbourVector <- string_db$get_neighbors(stringId1)
             ensembleIdsFromStringDb <- mapFromStringIdsToEnsembleIds(returnNeighbourVector)
             stringGensSymbols <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDb, organismTaxonomyId = stringOrganismId)
         }
-        dffff <- data.frame('ensembleIds' = dfElement$ensembleIds[1],
+        dffff <- data.frame('ensembleIds' = dfElement[1,listOfEnsembleIdColumnName][1],
                             'stringIds' = I(list(unique(returnNeighbourVector))),
                             'stringGensSymbols' = I(list(unique(stringGensSymbols))) )
         dffff
@@ -251,10 +261,10 @@ makePLSCharts <- function(PLS) {
 
 
 # NEW PUBLIC API
-createFunctionalInteractionsDataFrame <- function(chebiToReactomeDataFrame) {
-    functionalInteractionsDataFrame <- ddply(.data = chebiIdsToReactomePathways, .(ontologyId), .fun = function(dfElement) {
-        functionalInteractionsRows <- adply(.data = dfElement$ensembleIds[[1]], .margins = 1, dfff = dfff, .fun = function(listElement, dfff) {
-            functionalInteractionsRow <- data.frame("Gene1" = dfElement$ontologyId,
+createFunctionalInteractionsDataFrame <- function(chebiToReactomeDataFrame, singleIdColumnName = 'ontologyId', idsListColumnName = 'ensembleIds') {
+    functionalInteractionsDataFrame <- ddply(.data = chebiIdsToReactomePathways, c(singleIdColumnName), .fun = function(dfElement) {
+        functionalInteractionsRows <- adply(.data = dfElement[1,c(idsListColumnName)][[1]], .margins = 1, dfff = dfff, .fun = function(listElement, dfff) {
+            functionalInteractionsRow <- data.frame("Gene1" = dfElement[1, c(singleIdColumnName)],
                                "Gene2" = listElement,
                                "Annotation" = "reactome",
                                "Direction" = "-",
