@@ -153,9 +153,8 @@ getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage <- function(gensIdsVector, or
     equivalentEnsemlProteinsIdsVector
 }
 
-
 # NEW PUBLIC API
-groupUsingUserDefinition <- function(dfWithMapping, pathToFileWithGroupDefinition ) {
+groupUsingUserDefinition <- function(pathToFileWithGroupDefinition ) {
     maxColLength <- max(count.fields(pathToFileWithGroupDefinition, sep = '\t'))
     model <- read.table(file = pathToFileWithGroupDefinition, header = TRUE, fill = TRUE,
                         stringsAsFactors = FALSE, sep = "\t", strip.white = TRUE)
@@ -184,9 +183,57 @@ makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFr
     if (!length(X) || !length(Y)) {
         print("CCA is not possible.")
     } else {
-        cca.fit <- yacca::cca(X, Y)
+        # print("X IS : ")
+        # print(X)
+        # print("Y IS : ")
+        # print(Y)
+        # cca.fit <- yacca::cca(X, Y)
+
+
+        cca.fit <- tryCatch(
+            {
+                yacca::cca(X, Y)
+            },
+            error = function(cond) {
+                message("ONION - Included CCA can not solve task.")
+                message("Original message (yacca):")
+                message(cond)
+                # Choose a return value in case of error
+                return(NA)
+            },
+            warning = function(cond) {
+                message("ONION - Included CCA present warning.")
+                message("Original message (yacca):")
+                message(cond)
+                # Choose a return value in case of warning
+                return(NULL)
+            },
+            finally = {
+                message("ONION - CCA (yacca) finished with success.")
+            }
+        )
     }
     cca.fit
+}
+
+# NEW PUBLIC API
+makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbols', groupsDataDF, mappingDataDF){
+    ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {
+        print(dfElement)
+        rightSideIdsToAnalys <- unlist(strsplit(as.character(dfElement), split = " "));
+        print(rightSideIdsToAnalys)
+        leftSideIdsToAnalys <- mappingDF[mappingDF[[leftMappingColumnName]] %in% rightSideIdsToAnalys,][[rightMappingColumnName]]
+        leftSideIdsToAnalys <- unique(unlist(leftSideIdsToAnalys))
+
+        ccaResults <- ONION::makeCanonicalCorrelationAnalysis(
+            xNamesVector = leftSideIdsToAnalys,
+            yNamesVector = rightSideIdsToAnalys,
+            XDataFrame = mappingDataDF,
+            YDataFrame = groupsDataDF)
+
+        dfWithCca <- data.frame('right' = I(list(rightSideIdsToAnalys)), 'left' = I(list(leftSideIdsToAnalys)), 'ccaResults' = I(list(ccaResults)))
+        dfWithCca
+    })
 }
 
 

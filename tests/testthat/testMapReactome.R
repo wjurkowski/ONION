@@ -83,6 +83,19 @@ test_that("NewOnionApiWorkflow test", {
         XDataFrame = XDF,
         YDataFrame = YDF)
 
+    groups['Molecules']
+
+    rooot <- 'root'
+    chebiIdsToReactomePathways[rooot]
+    chebiIdsToReactomePathways[[rooot]]
+    chebiIdsToReactomePathways$root
+
+    mccReactome <- ONION::makeCCAOnGroups(groupsDefinitionDF = groups, mappingDF = chebiIdsToReactomePathways, groupsDataDF = YDF, mappingDataDF = XDF)
+    mccReactome[4,]$ccaResults
+
+    mccString <- ONION::makeCCAOnGroups(groupsDefinitionDF = groups, mappingDF = chebiIdsToReactomePathwaysAndToStringNeighbours, groupsDataDF = YDF, mappingDataDF = XDF, rightMappingColumnName = 'stringGenesSymbols')
+    mccString[7,]$ccaResults
+
     plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
 
     plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults2)
