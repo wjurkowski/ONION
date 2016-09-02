@@ -22,13 +22,13 @@ mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyI
         pathwayIds <- getPathwaysIdsForChebiUnderOrganism(idToCheck, taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
         ensembleIds <- getEnsemblIdsForPathwayIds(pathwayIds)
         uniProtIds <- getUniProtIdsForPathwayIds(pathwayIds)
-        gensSymbols <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
-        gensSymbolsFromUniProt <- getSymbolsBaseOnUniProtIdsUsingMyGenePackage(uniProtIds, organismTaxonomyId = organismTaxonomyId)
+        genesSymbols <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
+        genesSymbolsFromUniProt <- getSymbolsBaseOnUniProtIdsUsingMyGenePackage(uniProtIds, organismTaxonomyId = organismTaxonomyId)
         chebiIdToEnsembleIds <- data.frame('ensembleIds' = I(list(ensembleIds)),
                                            'uniProtIds' = I(list(uniProtIds)),
                                            'reactomeIds' = I(list(pathwayIds)),
-                                           'gensSymbols' = I(list(gensSymbols)),
-                                           'gensSymbolsFromUniProt' = I(list(gensSymbolsFromUniProt)))
+                                           'genesSymbols' = I(list(genesSymbols)),
+                                           'genesSymbolsFromUniProt' = I(list(genesSymbolsFromUniProt)))
         chebiIdToEnsembleIds
     })
     chebiIdsToEnsembleIds
@@ -64,7 +64,7 @@ getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9
     chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways[idsColumnName] == 0, ]
     dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, c(idsColumnName, rootColumnName), .fun = function(dfElement) {
         returnNeighbourVector <- character(length = 0)
-        stringGensSymbols <- character(length = 0)
+        stringGenesSymbols <- character(length = 0)
         if (0 == length(dfElement[1, listOfEnsembleIdColumnName][[1]])) {
         } else {
             proteinIds <- getEnsemblProteinsIdsBaseOnEnsemblGensIdsUsingMyGenePackage(
@@ -73,11 +73,11 @@ getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9
             stringId1 <- string_db$mp(proteinIds)
             returnNeighbourVector <- string_db$get_neighbors(stringId1)
             ensembleIdsFromStringDb <- mapFromStringIdsToEnsembleIds(returnNeighbourVector)
-            stringGensSymbols <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDb, organismTaxonomyId = stringOrganismId)
+            stringGenesSymbols <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDb, organismTaxonomyId = stringOrganismId)
         }
         dffff <- data.frame('ensembleIds' = dfElement[1,listOfEnsembleIdColumnName][1],
                             'stringIds' = I(list(unique(returnNeighbourVector))),
-                            'stringGensSymbols' = I(list(unique(stringGensSymbols))) )
+                            'stringGenesSymbols' = I(list(unique(stringGenesSymbols))) )
         dffff
     })
     dfWithString

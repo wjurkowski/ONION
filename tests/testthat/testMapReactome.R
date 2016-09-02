@@ -36,7 +36,7 @@ test_that("NewOnionApiWorkflow test", {
     functionalInteractions <- ONION::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
     head(functionalInteractions)
 
-    chebiIdsToReactomePathwaysSmall <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[c("ontologyId")], organismTaxonomyId = '9606')
+    chebiIdsToReactomePathwaysSmall <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[c("ontologyId")], organismTaxonomyId = '9606', rootColumnName = NULL)
     head(chebiIdsToReactomePathwaysSmall)
 
 
@@ -52,16 +52,16 @@ test_that("NewOnionApiWorkflow test", {
     lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == 73705,]$root
     joinLip <- c(lip1, lip2)
 
-    reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 27432,]$gensSymbols[[1]]
-    reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 16015,]$gensSymbols[[1]]
+    reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 27432,]$genesSymbols[[1]]
+    reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 16015,]$genesSymbols[[1]]
     joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]
 
     stringTrans1 <- chebiIdsToReactomePathwaysAndToStringNeighbours[
             chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == 27432,
-        ]$stringGensSymbols[[1]]
+        ]$stringGenesSymbols[[1]]
     stringTrans2 <- chebiIdsToReactomePathwaysAndToStringNeighbours[
             chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == 16015,
-        ]$stringGensSymbols[[1]]
+        ]$stringGenesSymbols[[1]]
     joinStringTrans <- c(stringTrans1, stringTrans2)[!duplicated(c(stringTrans1, stringTrans2))]
 
 
