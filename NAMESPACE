@@ -32,6 +32,7 @@ export(plotRmsepForPLS)
 export(plotRegression)
 export(createFunctionalInteractionsDataFrame)
 export(makeCCAOnGroups)
+export(makePermutationTestOnCCA)
 
 # DEV Exports.
 

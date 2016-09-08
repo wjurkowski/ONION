@@ -216,6 +216,23 @@ makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFr
     cca.fit
 }
 
+
+# NEW PUBLIC API
+makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTestOnX, numberOfRowsForTestOnY, numberOfIterations = 100, countedCCA) {
+    vectorOfXrd <- as.numeric();
+    vectorOfYrd <- as.numeric();
+    for (i in 1:numberOfIterations) {
+        xNV <- as.character(XDataFrame[sample(nrow(XDataFrame), numberOfRowsForTestOnX), ][,1])
+        yNV <- as.character(YDataFrame[sample(nrow(YDataFrame), numberOfRowsForTestOnY), ][,1])
+        ccaResult <- ONION::makeCanonicalCorrelationAnalysis(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
+        vectorOfXrd <- c(vectorOfXrd, ccaResult$xrd)
+        vectorOfYrd <- c(vectorOfYrd, ccaResult$yrd)
+    }
+    testResult <- list("countedCCAOnX" = countedCCA$xrd, "countedCCAOnY" = countedCCA$xrd, "meanOnX" = mean(vectorOfXrd), "meanOnY" = mean(vectorOfYrd))
+    testResult
+}
+
+
 # NEW PUBLIC API
 makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbols', groupsDataDF, mappingDataDF){
     ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {

@@ -48,12 +48,12 @@ test_that("NewOnionApiWorkflow test", {
 
     # JOIN on input data and Reactome result, String results.
     # INFO : Be careful Ewa with 73705 -> 16015. Look at clusteredSmallMolecules and mergedSmallMolecules.
-    lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == 27432,]$root
-    lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == 73705,]$root
-    joinLip <- c(lip1, lip2)
+    lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:27432",]$root
+    lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:73705",]$root
+    joinLip <- c(as.character(lip1), as.character(lip2))
 
-    reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 27432,]$genesSymbols[[1]]
-    reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 16015,]$genesSymbols[[1]]
+    reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:27432",]$genesSymbols[[1]]
+    reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:16015",]$genesSymbols[[1]]
     joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]
 
     stringTrans1 <- chebiIdsToReactomePathwaysAndToStringNeighbours[
@@ -70,6 +70,9 @@ test_that("NewOnionApiWorkflow test", {
 
     XDF <- read.table(pathToExampleFileWithXData, header = TRUE);
     YDF <- read.table(pathToExampleFileWithYData, header = TRUE);
+
+    dim(YDF)
+    dim(XDF)
 
     ccaResults1 <- ONION::makeCanonicalCorrelationAnalysis(
         xNamesVector = joinRecatomeTrans,
@@ -91,7 +94,17 @@ test_that("NewOnionApiWorkflow test", {
     chebiIdsToReactomePathways$root
 
     mccReactome <- ONION::makeCCAOnGroups(groupsDefinitionDF = groups, mappingDF = chebiIdsToReactomePathways, groupsDataDF = YDF, mappingDataDF = XDF)
-    mccReactome[4,]$ccaResults
+
+    permutationTestsResults <- ONION::makePermutationTestOnCCA(XDataFrame = XDF, YDataFrame = YDF, 17, 2, 50, countedCCA = ccaResults1)
+
+    plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome[4,]$ccaResults[[1]])
+
+    p <- recordPlot()
+
+    plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome[4,]$ccaResults[[1]])
+    p
+
+    plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome[1,]$ccaResults[[1]])
 
     mccString <- ONION::makeCCAOnGroups(groupsDefinitionDF = groups, mappingDF = chebiIdsToReactomePathwaysAndToStringNeighbours, groupsDataDF = YDF, mappingDataDF = XDF, rightMappingColumnName = 'stringGenesSymbols')
     mccString[7,]$ccaResults
