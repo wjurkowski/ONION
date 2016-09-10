@@ -219,16 +219,45 @@ makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFr
 
 # NEW PUBLIC API
 makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTestOnX, numberOfRowsForTestOnY, numberOfIterations = 100, countedCCA) {
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print(numberOfRowsForTestOnX)
+    print(numberOfRowsForTestOnY)
+    # print()
+    # print()
     vectorOfXrd <- as.numeric();
     vectorOfYrd <- as.numeric();
     for (i in 1:numberOfIterations) {
         xNV <- as.character(XDataFrame[sample(nrow(XDataFrame), numberOfRowsForTestOnX), ][,1])
         yNV <- as.character(YDataFrame[sample(nrow(YDataFrame), numberOfRowsForTestOnY), ][,1])
         ccaResult <- ONION::makeCanonicalCorrelationAnalysis(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
-        vectorOfXrd <- c(vectorOfXrd, ccaResult$xrd)
-        vectorOfYrd <- c(vectorOfYrd, ccaResult$yrd)
+        print("++++++++++++++++++++++++++++++++++")
+        # print.default(ccaResult)
+        if (is.na(ccaResult) || is.null(ccaResult)) {
+
+        } else {
+            vectorOfXrd <- c(vectorOfXrd, ccaResult$xrd)
+            vectorOfYrd <- c(vectorOfYrd, ccaResult$yrd)
+        }
     }
-    testResult <- list("countedCCAOnX" = countedCCA$xrd, "countedCCAOnY" = countedCCA$xrd, "meanOnX" = mean(vectorOfXrd), "meanOnY" = mean(vectorOfYrd))
+
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    # print.default(countedCCA)
+    print("*****************************")
+    print(countedCCA$xrd)
+    print(countedCCA$yrd)
+    print(vectorOfXrd)
+    print(vectorOfYrd)
+    print(mean(vectorOfXrd))
+    print(mean(vectorOfYrd))
+    meanOfXrd <- NA;
+    meanOfYrd <- NA;
+    if (0 != length(vectorOfXrd)) {
+        meanOfXrd <- mean(vectorOfXrd);
+    }
+    if (0 != length(vectorOfYrd)) {
+        meanOfYrd <- mean(vectorOfYrd);
+    }
+    testResult <- list("countedCCAOnX" = countedCCA$xrd, "countedCCAOnY" = countedCCA$yrd, "meanOnX" = meanOfXrd, "meanOnY" = meanOfYrd)
     testResult
 }
 
@@ -236,6 +265,7 @@ makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTest
 # NEW PUBLIC API
 makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbols', groupsDataDF, mappingDataDF){
     ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {
+        print("???????????????????")
         print(dfElement)
         rightSideIdsToAnalys <- unlist(strsplit(as.character(dfElement), split = " "));
         print(rightSideIdsToAnalys)
@@ -248,7 +278,22 @@ makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName
             XDataFrame = mappingDataDF,
             YDataFrame = groupsDataDF)
 
-        dfWithCca <- data.frame('right' = I(list(rightSideIdsToAnalys)), 'left' = I(list(leftSideIdsToAnalys)), 'ccaResults' = I(list(ccaResults)))
+        print("######################################")
+        # print(ccaResults)
+        print("---------------------------")
+        # print.default(ccaResults)
+        #TODO : Use user defined column name instead of symbol. ChEBI column too.
+        numberOfRowsForTestOnX <- nrow(XDataFrame[XDataFrame$symbol %in% leftSideIdsToAnalys, ])
+        numberOfRowsForTestOnY <- nrow(YDataFrame[YDataFrame$ChEBI %in% rightSideIdsToAnalys, ])
+        parmutationTestResult <- makePermutationTestOnCCA(XDataFrame = mappingDataDF, YDataFrame = groupsDataDF,
+                                                          numberOfRowsForTestOnX = numberOfRowsForTestOnX,
+                                                          numberOfRowsForTestOnY = numberOfRowsForTestOnY,
+                                                          numberOfIterations = 50, countedCCA = ccaResults);
+
+        dfWithCca <- data.frame('right' = I(list(rightSideIdsToAnalys)),
+                                'left' = I(list(leftSideIdsToAnalys)),
+                                'ccaResults' = I(list(ccaResults)),
+                                'ccaPermutationTestResults' = I(list(parmutationTestResult)))
         dfWithCca
     })
 }
