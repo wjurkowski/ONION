@@ -114,11 +114,20 @@ test_that("NewOnionApiWorkflow test", {
     plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults2)
 
 
+    PLSResult1 <- NULL
+
     PLSResult1 <- ONION::makePartialLeastSquaresRegression(
         joinRecatomeTrans,
         joinLip,
         XDataFrame = XDF,
         YDataFrame = YDF)
+
+    groupPlsReactome <- ONION::makePLSOnGroups(groupsDefinitionDF = groups, mappingDF = chebiIdsToReactomePathways, groupsDataDF = YDF, mappingDataDF = XDF)
+
+    as.numeric(PLSResult1$varianceExplained[1])
+
+    explanatoryVariance <- pls::explvar(PLSResult1$training)
+
 
     PLSResult2 <- ONION::makePartialLeastSquaresRegression(
         joinStringTrans,

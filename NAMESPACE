@@ -31,8 +31,10 @@ export(makePartialLeastSquaresRegression)
 export(plotRmsepForPLS)
 export(plotRegression)
 export(createFunctionalInteractionsDataFrame)
-export(makeCCAOnGroups)
 export(makePermutationTestOnCCA)
+export(makeCCAOnGroups)
+export(makePermutationTestOnPLS)
+export(makePLSOnGroups)
 
 # DEV Exports.
 

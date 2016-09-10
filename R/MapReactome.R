@@ -209,7 +209,7 @@ makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFr
                 return(NULL)
             },
             finally = {
-                message("ONION - CCA (yacca) finished with success.")
+                message("ONION - CCA (yacca) finished.")
             }
         )
     }
@@ -257,7 +257,10 @@ makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTest
     if (0 != length(vectorOfYrd)) {
         meanOfYrd <- mean(vectorOfYrd);
     }
-    testResult <- list("countedCCAOnX" = countedCCA$xrd, "countedCCAOnY" = countedCCA$yrd, "meanOnX" = meanOfXrd, "meanOnY" = meanOfYrd)
+    testResult <- list("countedCCAOnX" = countedCCA$xrd,
+                       "countedCCAOnY" = countedCCA$yrd,
+                       "meanOnX" = meanOfXrd,
+                       "meanOnY" = meanOfYrd)
     testResult
 }
 
@@ -283,8 +286,8 @@ makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName
         print("---------------------------")
         # print.default(ccaResults)
         #TODO : Use user defined column name instead of symbol. ChEBI column too.
-        numberOfRowsForTestOnX <- nrow(XDataFrame[XDataFrame$symbol %in% leftSideIdsToAnalys, ])
-        numberOfRowsForTestOnY <- nrow(YDataFrame[YDataFrame$ChEBI %in% rightSideIdsToAnalys, ])
+        numberOfRowsForTestOnX <- nrow(mappingDataDF[mappingDataDF$symbol %in% leftSideIdsToAnalys, ])
+        numberOfRowsForTestOnY <- nrow(groupsDataDF[groupsDataDF$ChEBI %in% rightSideIdsToAnalys, ])
         parmutationTestResult <- makePermutationTestOnCCA(XDataFrame = mappingDataDF, YDataFrame = groupsDataDF,
                                                           numberOfRowsForTestOnX = numberOfRowsForTestOnX,
                                                           numberOfRowsForTestOnY = numberOfRowsForTestOnY,
@@ -331,16 +334,124 @@ makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
     combinedToTraining <- combined[1:trainingRows,]
     combinedToTest <- combined[(trainingRows + 1):nrow(combined),]
 
-    PLSResultsFromMatrixInDF <- plsr(Y ~ X, data = combinedToTraining)
+    PLSResults <- tryCatch(
+        {
+            PLSResultsFromMatrixInDF <- plsr(Y ~ X, data = combinedToTraining)
 
-    PlsPredict <- predict(PLSResultsFromMatrixInDF, ncomp = ncompValue, newdata = combinedToTest)
-    PlsTestRmsep <- RMSEP(PLSResultsFromMatrixInDF, newdata = combinedToTest)
+            PlsPredict <- predict(PLSResultsFromMatrixInDF, ncomp = ncompValue, newdata = combinedToTest)
+            PlsTestRmsep <- RMSEP(PLSResultsFromMatrixInDF, newdata = combinedToTest)
+            varianceExplained <- pls::explvar(PLSResultsFromMatrixInDF)
 
-    #TODO: TRAINING and TEST is required!
-    PLSResults <- list(training = PLSResultsFromMatrixInDF, test = PlsPredict, testRmsep = PlsTestRmsep)
+            #TODO: TRAINING and TEST is required!
+            PLSResultsList <- list("training" = PLSResultsFromMatrixInDF,
+                               "varianceExplained" = varianceExplained,
+                               "test" = PlsPredict,
+                               "testRmsep" = PlsTestRmsep)
+            PLSResultsList
+        },
+        error = function(cond) {
+            message("ONION - Included PLS can not solve task.")
+            message("Original message (pls):")
+            message(cond)
+            # Choose a return value in case of error
+            return(NA)
+        },
+        warning = function(cond) {
+            message("ONION - Included PLS present warning.")
+            message("Original message (pls):")
+            message(cond)
+            # Choose a return value in case of warning
+            return(NULL)
+        },
+        finally = {
+            message("ONION - PLS (pls) finished.")
+        }
+    )
     PLSResults
 }
 
+# NEW PUBLIC API
+makePermutationTestOnPLS <- function(XDataFrame, YDataFrame, numberOfRowsForTestOnX, numberOfRowsForTestOnY, numberOfIterations = 100, countedPLS) {
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print(numberOfRowsForTestOnX)
+    print(numberOfRowsForTestOnY)
+    # print()
+    # print()
+    vectorOfVarianceExplained <- as.numeric();
+    for (i in 1:numberOfIterations) {
+        xNV <- as.character(XDataFrame[sample(nrow(XDataFrame), numberOfRowsForTestOnX), ][,1])
+        yNV <- as.character(YDataFrame[sample(nrow(YDataFrame), numberOfRowsForTestOnY), ][,1])
+        plsResult <- ONION::makePartialLeastSquaresRegression(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
+        print("++++++++++++++++++++++++++++++++++")
+        # print.default(ccaResult)
+        if (is.na(plsResult) || is.null(plsResult)) {
+
+        } else {
+            vectorOfVarianceExplained <- c(vectorOfVarianceExplained, as.numeric(plsResult$varianceExplained[1]))
+        }
+    }
+
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    # print.default(countedCCA)
+    print("*****************************")
+    # print(countedCCA$xrd)
+    # print(countedCCA$yrd)
+    print(vectorOfVarianceExplained)
+    print(mean(vectorOfVarianceExplained))
+    print(countedPLS)
+
+    meanOfVarianceExplained <- NA;
+    if (0 != length(vectorOfVarianceExplained)) {
+        meanOfVarianceExplained <- mean(vectorOfVarianceExplained);
+    }
+
+    countedPLSRecord <- NA;
+    if (is.na(countedPLS) || is.null(countedPLS)) {
+
+    } else {
+        countedPLSRecord <- countedPLS$varianceExplained[1];
+    }
+
+    testResult <- list("countedPLSOnX" = countedPLSRecord,
+                       "meanOnVarianceExplained" = meanOfVarianceExplained)
+    testResult
+}
+
+# NEW PUBLIC API
+makePLSOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbols', groupsDataDF, mappingDataDF){
+    ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {
+        print("???????????????????")
+        print(dfElement)
+        rightSideIdsToAnalys <- unlist(strsplit(as.character(dfElement), split = " "));
+        print(rightSideIdsToAnalys)
+        leftSideIdsToAnalys <- mappingDF[mappingDF[[leftMappingColumnName]] %in% rightSideIdsToAnalys,][[rightMappingColumnName]]
+        leftSideIdsToAnalys <- unique(unlist(leftSideIdsToAnalys))
+
+        plsResults <- makePartialLeastSquaresRegression(
+            xNamesVector = leftSideIdsToAnalys,
+            yNamesVector = rightSideIdsToAnalys,
+            XDataFrame = mappingDataDF,
+            YDataFrame = groupsDataDF)
+
+        print("######################################")
+        # print(ccaResults)
+        print("---------------------------")
+        # print.default(ccaResults)
+        #TODO : Use user defined column name instead of symbol. ChEBI column too.
+        numberOfRowsForTestOnX <- nrow(mappingDataDF[mappingDataDF$symbol %in% leftSideIdsToAnalys, ])
+        numberOfRowsForTestOnY <- nrow(groupsDataDF[groupsDataDF$ChEBI %in% rightSideIdsToAnalys, ])
+        parmutationTestResult <- makePermutationTestOnPLS(XDataFrame = mappingDataDF, YDataFrame = groupsDataDF,
+                                                          numberOfRowsForTestOnX = numberOfRowsForTestOnX,
+                                                          numberOfRowsForTestOnY = numberOfRowsForTestOnY,
+                                                          numberOfIterations = 50, countedPLS = plsResults);
+
+        dfWithCca <- data.frame('right' = I(list(rightSideIdsToAnalys)),
+                                'left' = I(list(leftSideIdsToAnalys)),
+                                'plsResults' = I(list(plsResults)),
+                                'plsPermutationTestResults' = I(list(parmutationTestResult)))
+        dfWithCca
+    })
+}
 
 # NEW PUBLIC API
 plotRmsepForPLS <- function(PLSResult) {
