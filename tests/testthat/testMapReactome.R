@@ -20,9 +20,11 @@ test_that("NewOnionApiWorkflow test", {
     # Basic flow. Chebi -> Reactome -> String.
     pathToFileWithChebiIds <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
     baseData <- read.table(pathToFileWithChebiIds, header = TRUE)
+    head(baseData)
     #Filtering, analiza składowych, zmiana kolumn DF w baseData.
     clusteredSmallMolecules <- ONION::clusterUsingOntology(chebiIdsDataFrame = baseData,
-                                ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
+                                                           rootColumnName = "ChEBI",
+                                                           ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
     head(clusteredSmallMolecules)
 
     mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clusteredSmallMolecules)
@@ -34,8 +36,9 @@ test_that("NewOnionApiWorkflow test", {
     functionalInteractions <- ONION::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
     head(functionalInteractions)
 
-    chebiIdsToReactomePathwaysSmall <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[c("ontologyId")], organismTaxonomyId = '9606')
+    chebiIdsToReactomePathwaysSmall <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[c("ontologyId")], organismTaxonomyId = '9606', rootColumnName = NULL)
     head(chebiIdsToReactomePathwaysSmall)
+
 
     chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(chebiIdsToReactomePathways)
     head(chebiIdsToReactomePathwaysAndToStringNeighbours)
@@ -45,20 +48,20 @@ test_that("NewOnionApiWorkflow test", {
 
     # JOIN on input data and Reactome result, String results.
     # INFO : Be careful Ewa with 73705 -> 16015. Look at clusteredSmallMolecules and mergedSmallMolecules.
-    lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == 27432,]$root
-    lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == 73705,]$root
-    joinLip <- c(lip1, lip2)
+    lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:27432",]$root
+    lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:73705",]$root
+    joinLip <- c(as.character(lip1), as.character(lip2))
 
-    reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 27432,]$gensSymbols[[1]]
-    reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 16015,]$gensSymbols[[1]]
+    reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:27432",]$genesSymbols[[1]]
+    reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:16015",]$genesSymbols[[1]]
     joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]
 
     stringTrans1 <- chebiIdsToReactomePathwaysAndToStringNeighbours[
             chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == 27432,
-        ]$stringGensSymbols[[1]]
+        ]$stringGenesSymbols[[1]]
     stringTrans2 <- chebiIdsToReactomePathwaysAndToStringNeighbours[
             chebiIdsToReactomePathwaysAndToStringNeighbours$chebiId == 16015,
-        ]$stringGensSymbols[[1]]
+        ]$stringGenesSymbols[[1]]
     joinStringTrans <- c(stringTrans1, stringTrans2)[!duplicated(c(stringTrans1, stringTrans2))]
 
 
@@ -67,6 +70,9 @@ test_that("NewOnionApiWorkflow test", {
 
     XDF <- read.table(pathToExampleFileWithXData, header = TRUE);
     YDF <- read.table(pathToExampleFileWithYData, header = TRUE);
+
+    dim(YDF)
+    dim(XDF)
 
     ccaResults1 <- ONION::makeCanonicalCorrelationAnalysis(
         xNamesVector = joinRecatomeTrans,
@@ -80,16 +86,48 @@ test_that("NewOnionApiWorkflow test", {
         XDataFrame = XDF,
         YDataFrame = YDF)
 
+    groups['Molecules']
+
+    rooot <- 'root'
+    chebiIdsToReactomePathways[rooot]
+    chebiIdsToReactomePathways[[rooot]]
+    chebiIdsToReactomePathways$root
+
+    mccReactome <- ONION::makeCCAOnGroups(groupsDefinitionDF = groups, mappingDF = chebiIdsToReactomePathways, groupsDataDF = YDF, mappingDataDF = XDF)
+
+    permutationTestsResults <- ONION::makePermutationTestOnCCA(XDataFrame = XDF, YDataFrame = YDF, 17, 2, 50, countedCCA = ccaResults1)
+
+    plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome[4,]$ccaResults[[1]])
+
+    p <- recordPlot()
+
+    plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome[4,]$ccaResults[[1]])
+    p
+
+    plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome[1,]$ccaResults[[1]])
+
+    mccString <- ONION::makeCCAOnGroups(groupsDefinitionDF = groups, mappingDF = chebiIdsToReactomePathwaysAndToStringNeighbours, groupsDataDF = YDF, mappingDataDF = XDF, rightMappingColumnName = 'stringGenesSymbols')
+    mccString[7,]$ccaResults
+
     plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
 
     plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults2)
 
+
+    PLSResult1 <- NULL
 
     PLSResult1 <- ONION::makePartialLeastSquaresRegression(
         joinRecatomeTrans,
         joinLip,
         XDataFrame = XDF,
         YDataFrame = YDF)
+
+    groupPlsReactome <- ONION::makePLSOnGroups(groupsDefinitionDF = groups, mappingDF = chebiIdsToReactomePathways, groupsDataDF = YDF, mappingDataDF = XDF)
+
+    as.numeric(PLSResult1$varianceExplained[1])
+
+    explanatoryVariance <- pls::explvar(PLSResult1$training)
+
 
     PLSResult2 <- ONION::makePartialLeastSquaresRegression(
         joinStringTrans,

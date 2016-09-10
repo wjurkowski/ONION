@@ -1,24 +1,34 @@
 
 # NEW PUBLIC API:
-clusterUsingOntology <- function(chebiIdsDataFrame, ontologyRepresentatnion) {
-    ontologyDataFrame <- ontologyRepresentatnion(chebiIdsDataFrame)
+clusterUsingOntology <- function(chebiIdsDataFrame, rootColumnName, ontologyRepresentatnion) {
+    ontologyDataFrame <- ontologyRepresentatnion(baseData = chebiIdsDataFrame, rootColumnName = rootColumnName)
     ontologyDataFrame
 }
 
 
 # NEW PUBLIC API:
-mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyId='9606') {
-    chebiIdsToEnsembleIds <- ddply(.data = chebiOntologyIds, .(ontologyId, root), .fun = function(vectorElement) {
-        pathwayIds <- getPathwaysIdsForChebiUnderOrganism(vectorElement[1,'ontologyId'], taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
+mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyId='9606', idsColumnName = 'ontologyId', rootColumnName = 'root') {
+    # x <- c("supp", "dose")
+    chebiIdsToEnsembleIds <- ddply(.data = chebiOntologyIds, c(idsColumnName, rootColumnName), .fun = function(vectorElement) {
+
+        print(as.character(vectorElement[1, c(idsColumnName)]))
+        idToCheck <- as.character(strsplit(as.character(vectorElement[1, c(idsColumnName)]), ":")[[1]][2])
+        print("idToCheck")
+        print(idToCheck)
+        if (is.na(idToCheck)) {
+            idToCheck <- as.character("0");
+            print(idToCheck)
+        }
+        pathwayIds <- getPathwaysIdsForChebiUnderOrganism(idToCheck, taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
         ensembleIds <- getEnsemblIdsForPathwayIds(pathwayIds)
         uniProtIds <- getUniProtIdsForPathwayIds(pathwayIds)
-        gensSymbols <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
-        gensSymbolsFromUniProt <- getSymbolsBaseOnUniProtIdsUsingMyGenePackage(uniProtIds, organismTaxonomyId = organismTaxonomyId)
+        genesSymbols <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
+        genesSymbolsFromUniProt <- getSymbolsBaseOnUniProtIdsUsingMyGenePackage(uniProtIds, organismTaxonomyId = organismTaxonomyId)
         chebiIdToEnsembleIds <- data.frame('ensembleIds' = I(list(ensembleIds)),
                                            'uniProtIds' = I(list(uniProtIds)),
                                            'reactomeIds' = I(list(pathwayIds)),
-                                           'gensSymbols' = I(list(gensSymbols)),
-                                           'gensSymbolsFromUniProt' = I(list(gensSymbolsFromUniProt)))
+                                           'genesSymbols' = I(list(genesSymbols)),
+                                           'genesSymbolsFromUniProt' = I(list(genesSymbolsFromUniProt)))
         chebiIdToEnsembleIds
     })
     chebiIdsToEnsembleIds
@@ -49,25 +59,25 @@ taxonIdToReactomeCodes[['9823']] <- list(speciesName='Sus scrofa', speciesCode='
 
 
 # NEW PUBLIC API
-getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9606, stringDbVersion = "10") {
+getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9606, stringDbVersion = "10", idsColumnName = 'ontologyId', rootColumnName = 'root', listOfEnsembleIdColumnName = 'ensembleIds') {
     string_db <- STRINGdb$new( version = stringDbVersion, species = stringOrganismId)
-    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways$ontologyId == 0, ]
-    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, .(ontologyId, root), .fun = function(dfElement) {
+    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways[idsColumnName] == 0, ]
+    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, c(idsColumnName, rootColumnName), .fun = function(dfElement) {
         returnNeighbourVector <- character(length = 0)
-        stringGensSymbols <- character(length = 0)
-        if (0 == length(dfElement$ensembleIds[[1]])) {
+        stringGenesSymbols <- character(length = 0)
+        if (0 == length(dfElement[1, listOfEnsembleIdColumnName][[1]])) {
         } else {
             proteinIds <- getEnsemblProteinsIdsBaseOnEnsemblGensIdsUsingMyGenePackage(
-                dfElement$ensembleIds, organismTaxonomyId = stringOrganismId
+                dfElement[1,listOfEnsembleIdColumnName], organismTaxonomyId = stringOrganismId
             )
             stringId1 <- string_db$mp(proteinIds)
             returnNeighbourVector <- string_db$get_neighbors(stringId1)
             ensembleIdsFromStringDb <- mapFromStringIdsToEnsembleIds(returnNeighbourVector)
-            stringGensSymbols <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDb, organismTaxonomyId = stringOrganismId)
+            stringGenesSymbols <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDb, organismTaxonomyId = stringOrganismId)
         }
-        dffff <- data.frame('ensembleIds' = dfElement$ensembleIds[1],
+        dffff <- data.frame('ensembleIds' = dfElement[1,listOfEnsembleIdColumnName][1],
                             'stringIds' = I(list(unique(returnNeighbourVector))),
-                            'stringGensSymbols' = I(list(unique(stringGensSymbols))) )
+                            'stringGenesSymbols' = I(list(unique(stringGenesSymbols))) )
         dffff
     })
     dfWithString
@@ -143,9 +153,8 @@ getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage <- function(gensIdsVector, or
     equivalentEnsemlProteinsIdsVector
 }
 
-
 # NEW PUBLIC API
-groupUsingUserDefinition <- function(dfWithMapping, pathToFileWithGroupDefinition ) {
+groupUsingUserDefinition <- function(pathToFileWithGroupDefinition ) {
     maxColLength <- max(count.fields(pathToFileWithGroupDefinition, sep = '\t'))
     model <- read.table(file = pathToFileWithGroupDefinition, header = TRUE, fill = TRUE,
                         stringsAsFactors = FALSE, sep = "\t", strip.white = TRUE)
@@ -174,9 +183,122 @@ makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFr
     if (!length(X) || !length(Y)) {
         print("CCA is not possible.")
     } else {
-        cca.fit <- yacca::cca(X, Y)
+        # print("X IS : ")
+        # print(X)
+        # print("Y IS : ")
+        # print(Y)
+        # cca.fit <- yacca::cca(X, Y)
+
+
+        cca.fit <- tryCatch(
+            {
+                yacca::cca(X, Y)
+            },
+            error = function(cond) {
+                message("ONION - Included CCA can not solve task.")
+                message("Original message (yacca):")
+                message(cond)
+                # Choose a return value in case of error
+                return(NA)
+            },
+            warning = function(cond) {
+                message("ONION - Included CCA present warning.")
+                message("Original message (yacca):")
+                message(cond)
+                # Choose a return value in case of warning
+                return(NULL)
+            },
+            finally = {
+                message("ONION - CCA (yacca) finished.")
+            }
+        )
     }
     cca.fit
+}
+
+
+# NEW PUBLIC API
+makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTestOnX, numberOfRowsForTestOnY, numberOfIterations = 100, countedCCA) {
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print(numberOfRowsForTestOnX)
+    print(numberOfRowsForTestOnY)
+    # print()
+    # print()
+    vectorOfXrd <- as.numeric();
+    vectorOfYrd <- as.numeric();
+    for (i in 1:numberOfIterations) {
+        xNV <- as.character(XDataFrame[sample(nrow(XDataFrame), numberOfRowsForTestOnX), ][,1])
+        yNV <- as.character(YDataFrame[sample(nrow(YDataFrame), numberOfRowsForTestOnY), ][,1])
+        ccaResult <- ONION::makeCanonicalCorrelationAnalysis(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
+        print("++++++++++++++++++++++++++++++++++")
+        # print.default(ccaResult)
+        if (is.na(ccaResult) || is.null(ccaResult)) {
+
+        } else {
+            vectorOfXrd <- c(vectorOfXrd, ccaResult$xrd)
+            vectorOfYrd <- c(vectorOfYrd, ccaResult$yrd)
+        }
+    }
+
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    # print.default(countedCCA)
+    print("*****************************")
+    print(countedCCA$xrd)
+    print(countedCCA$yrd)
+    print(vectorOfXrd)
+    print(vectorOfYrd)
+    print(mean(vectorOfXrd))
+    print(mean(vectorOfYrd))
+    meanOfXrd <- NA;
+    meanOfYrd <- NA;
+    if (0 != length(vectorOfXrd)) {
+        meanOfXrd <- mean(vectorOfXrd);
+    }
+    if (0 != length(vectorOfYrd)) {
+        meanOfYrd <- mean(vectorOfYrd);
+    }
+    testResult <- list("countedCCAOnX" = countedCCA$xrd,
+                       "countedCCAOnY" = countedCCA$yrd,
+                       "meanOnX" = meanOfXrd,
+                       "meanOnY" = meanOfYrd)
+    testResult
+}
+
+
+# NEW PUBLIC API
+makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbols', groupsDataDF, mappingDataDF){
+    ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {
+        print("???????????????????")
+        print(dfElement)
+        rightSideIdsToAnalys <- unlist(strsplit(as.character(dfElement), split = " "));
+        print(rightSideIdsToAnalys)
+        leftSideIdsToAnalys <- mappingDF[mappingDF[[leftMappingColumnName]] %in% rightSideIdsToAnalys,][[rightMappingColumnName]]
+        leftSideIdsToAnalys <- unique(unlist(leftSideIdsToAnalys))
+
+        ccaResults <- ONION::makeCanonicalCorrelationAnalysis(
+            xNamesVector = leftSideIdsToAnalys,
+            yNamesVector = rightSideIdsToAnalys,
+            XDataFrame = mappingDataDF,
+            YDataFrame = groupsDataDF)
+
+        print("######################################")
+        # print(ccaResults)
+        print("---------------------------")
+        # print.default(ccaResults)
+        #TODO : Use user defined column name instead of symbol. ChEBI column too.
+        numberOfRowsForTestOnX <- nrow(mappingDataDF[mappingDataDF$symbol %in% leftSideIdsToAnalys, ])
+        numberOfRowsForTestOnY <- nrow(groupsDataDF[groupsDataDF$ChEBI %in% rightSideIdsToAnalys, ])
+        parmutationTestResult <- makePermutationTestOnCCA(XDataFrame = mappingDataDF, YDataFrame = groupsDataDF,
+                                                          numberOfRowsForTestOnX = numberOfRowsForTestOnX,
+                                                          numberOfRowsForTestOnY = numberOfRowsForTestOnY,
+                                                          numberOfIterations = 50, countedCCA = ccaResults);
+
+        dfWithCca <- data.frame('right' = I(list(rightSideIdsToAnalys)),
+                                'left' = I(list(leftSideIdsToAnalys)),
+                                'ccaResults' = I(list(ccaResults)),
+                                'ccaPermutationTestResults' = I(list(parmutationTestResult)))
+        dfWithCca
+    })
 }
 
 
@@ -212,16 +334,124 @@ makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
     combinedToTraining <- combined[1:trainingRows,]
     combinedToTest <- combined[(trainingRows + 1):nrow(combined),]
 
-    PLSResultsFromMatrixInDF <- plsr(Y ~ X, data = combinedToTraining)
+    PLSResults <- tryCatch(
+        {
+            PLSResultsFromMatrixInDF <- plsr(Y ~ X, data = combinedToTraining)
 
-    PlsPredict <- predict(PLSResultsFromMatrixInDF, ncomp = ncompValue, newdata = combinedToTest)
-    PlsTestRmsep <- RMSEP(PLSResultsFromMatrixInDF, newdata = combinedToTest)
+            PlsPredict <- predict(PLSResultsFromMatrixInDF, ncomp = ncompValue, newdata = combinedToTest)
+            PlsTestRmsep <- RMSEP(PLSResultsFromMatrixInDF, newdata = combinedToTest)
+            varianceExplained <- pls::explvar(PLSResultsFromMatrixInDF)
 
-    #TODO: TRAINING and TEST is required!
-    PLSResults <- list(training = PLSResultsFromMatrixInDF, test = PlsPredict, testRmsep = PlsTestRmsep)
+            #TODO: TRAINING and TEST is required!
+            PLSResultsList <- list("training" = PLSResultsFromMatrixInDF,
+                               "varianceExplained" = varianceExplained,
+                               "test" = PlsPredict,
+                               "testRmsep" = PlsTestRmsep)
+            PLSResultsList
+        },
+        error = function(cond) {
+            message("ONION - Included PLS can not solve task.")
+            message("Original message (pls):")
+            message(cond)
+            # Choose a return value in case of error
+            return(NA)
+        },
+        warning = function(cond) {
+            message("ONION - Included PLS present warning.")
+            message("Original message (pls):")
+            message(cond)
+            # Choose a return value in case of warning
+            return(NULL)
+        },
+        finally = {
+            message("ONION - PLS (pls) finished.")
+        }
+    )
     PLSResults
 }
 
+# NEW PUBLIC API
+makePermutationTestOnPLS <- function(XDataFrame, YDataFrame, numberOfRowsForTestOnX, numberOfRowsForTestOnY, numberOfIterations = 100, countedPLS) {
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print(numberOfRowsForTestOnX)
+    print(numberOfRowsForTestOnY)
+    # print()
+    # print()
+    vectorOfVarianceExplained <- as.numeric();
+    for (i in 1:numberOfIterations) {
+        xNV <- as.character(XDataFrame[sample(nrow(XDataFrame), numberOfRowsForTestOnX), ][,1])
+        yNV <- as.character(YDataFrame[sample(nrow(YDataFrame), numberOfRowsForTestOnY), ][,1])
+        plsResult <- ONION::makePartialLeastSquaresRegression(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
+        print("++++++++++++++++++++++++++++++++++")
+        # print.default(ccaResult)
+        if (is.na(plsResult) || is.null(plsResult)) {
+
+        } else {
+            vectorOfVarianceExplained <- c(vectorOfVarianceExplained, as.numeric(plsResult$varianceExplained[1]))
+        }
+    }
+
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    # print.default(countedCCA)
+    print("*****************************")
+    # print(countedCCA$xrd)
+    # print(countedCCA$yrd)
+    print(vectorOfVarianceExplained)
+    print(mean(vectorOfVarianceExplained))
+    print(countedPLS)
+
+    meanOfVarianceExplained <- NA;
+    if (0 != length(vectorOfVarianceExplained)) {
+        meanOfVarianceExplained <- mean(vectorOfVarianceExplained);
+    }
+
+    countedPLSRecord <- NA;
+    if (is.na(countedPLS) || is.null(countedPLS)) {
+
+    } else {
+        countedPLSRecord <- countedPLS$varianceExplained[1];
+    }
+
+    testResult <- list("countedPLSOnX" = countedPLSRecord,
+                       "meanOnVarianceExplained" = meanOfVarianceExplained)
+    testResult
+}
+
+# NEW PUBLIC API
+makePLSOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbols', groupsDataDF, mappingDataDF){
+    ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {
+        print("???????????????????")
+        print(dfElement)
+        rightSideIdsToAnalys <- unlist(strsplit(as.character(dfElement), split = " "));
+        print(rightSideIdsToAnalys)
+        leftSideIdsToAnalys <- mappingDF[mappingDF[[leftMappingColumnName]] %in% rightSideIdsToAnalys,][[rightMappingColumnName]]
+        leftSideIdsToAnalys <- unique(unlist(leftSideIdsToAnalys))
+
+        plsResults <- makePartialLeastSquaresRegression(
+            xNamesVector = leftSideIdsToAnalys,
+            yNamesVector = rightSideIdsToAnalys,
+            XDataFrame = mappingDataDF,
+            YDataFrame = groupsDataDF)
+
+        print("######################################")
+        # print(ccaResults)
+        print("---------------------------")
+        # print.default(ccaResults)
+        #TODO : Use user defined column name instead of symbol. ChEBI column too.
+        numberOfRowsForTestOnX <- nrow(mappingDataDF[mappingDataDF$symbol %in% leftSideIdsToAnalys, ])
+        numberOfRowsForTestOnY <- nrow(groupsDataDF[groupsDataDF$ChEBI %in% rightSideIdsToAnalys, ])
+        parmutationTestResult <- makePermutationTestOnPLS(XDataFrame = mappingDataDF, YDataFrame = groupsDataDF,
+                                                          numberOfRowsForTestOnX = numberOfRowsForTestOnX,
+                                                          numberOfRowsForTestOnY = numberOfRowsForTestOnY,
+                                                          numberOfIterations = 50, countedPLS = plsResults);
+
+        dfWithCca <- data.frame('right' = I(list(rightSideIdsToAnalys)),
+                                'left' = I(list(leftSideIdsToAnalys)),
+                                'plsResults' = I(list(plsResults)),
+                                'plsPermutationTestResults' = I(list(parmutationTestResult)))
+        dfWithCca
+    })
+}
 
 # NEW PUBLIC API
 plotRmsepForPLS <- function(PLSResult) {
@@ -251,10 +481,10 @@ makePLSCharts <- function(PLS) {
 
 
 # NEW PUBLIC API
-createFunctionalInteractionsDataFrame <- function(chebiToReactomeDataFrame) {
-    functionalInteractionsDataFrame <- ddply(.data = chebiIdsToReactomePathways, .(ontologyId), .fun = function(dfElement) {
-        functionalInteractionsRows <- adply(.data = dfElement$ensembleIds[[1]], .margins = 1, dfff = dfff, .fun = function(listElement, dfff) {
-            functionalInteractionsRow <- data.frame("Gene1" = dfElement$ontologyId,
+createFunctionalInteractionsDataFrame <- function(chebiToReactomeDataFrame, singleIdColumnName = 'ontologyId', idsListColumnName = 'ensembleIds') {
+    functionalInteractionsDataFrame <- ddply(.data = chebiIdsToReactomePathways, c(singleIdColumnName), .fun = function(dfElement) {
+        functionalInteractionsRows <- adply(.data = dfElement[1,c(idsListColumnName)][[1]], .margins = 1, dfff = dfff, .fun = function(listElement, dfff) {
+            functionalInteractionsRow <- data.frame("Gene1" = dfElement[1, c(singleIdColumnName)],
                                "Gene2" = listElement,
                                "Annotation" = "reactome",
                                "Direction" = "-",
