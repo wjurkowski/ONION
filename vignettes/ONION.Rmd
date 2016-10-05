@@ -12,7 +12,7 @@ vignette: >
 
 
 ```{r global_options, include=TRUE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, error = TRUE)
 ```
 
 # Table of Contents
@@ -111,14 +111,14 @@ chebiIdsToReactomePathwaysWithRoot <- invisible(ONION::mapReactomePathwaysUnderO
 ```
 NEW (C) : Result is DF, but it is complicated (complicated DF, which include lists as cells) object. This DF include:
 ```{r, echo=FALSE, results='asis'}
-head(chebiIdsToReactomePathwaysWithRoot$ontologyId, 1)
+head(chebiIdsToReactomePathwaysWithRoot$ontologyId, 5)
 # TODO : Convert root to character in code of ONION.
-head(as.character(chebiIdsToReactomePathwaysWithRoot$root), 1)
-chebiIdsToReactomePathwaysWithRoot$ensembleIds[[1]]
-chebiIdsToReactomePathwaysWithRoot$uniProtIds[[1]]
-chebiIdsToReactomePathwaysWithRoot$reactomeIds[[1]]
-chebiIdsToReactomePathwaysWithRoot$genesSymbolsFromEnsemble[[1]]
-chebiIdsToReactomePathwaysWithRoot$genesSymbolsFromUniProt[[1]]
+head(as.character(chebiIdsToReactomePathwaysWithRoot$root), 5)
+chebiIdsToReactomePathwaysWithRoot$ensembleIds[[5]]
+chebiIdsToReactomePathwaysWithRoot$uniProtIds[[5]]
+chebiIdsToReactomePathwaysWithRoot$reactomeIds[[5]]
+chebiIdsToReactomePathwaysWithRoot$genesSymbolsFromEnsemble[[5]]
+chebiIdsToReactomePathwaysWithRoot$genesSymbolsFromUniProt[[5]]
 # knitr::kable(head(chebiIdsToReactomePathways, 1))
 ```
 
