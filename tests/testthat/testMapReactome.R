@@ -27,10 +27,13 @@ test_that("NewOnionApiWorkflow test", {
                                                            ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
     head(clusteredSmallMolecules)
 
-    mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clusteredSmallMolecules)
+    mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(clusteredSmallMolecules, rootColumnName = 'root')
     head(mergedSmallMolecules)
 
     chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules, organismTaxonomyId = '9606')
+    chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[3,], organismTaxonomyId = '9606')
+    chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[4,], organismTaxonomyId = '9606')
+    chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[1,], organismTaxonomyId = '9606')
     head(chebiIdsToReactomePathways)
 
     functionalInteractions <- ONION::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
@@ -40,7 +43,12 @@ test_that("NewOnionApiWorkflow test", {
     head(chebiIdsToReactomePathwaysSmall)
 
 
-    chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(chebiIdsToReactomePathways)
+    chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(chebiIdsToReactomePathways[1,],
+                                                                                  stringOrganismId = 9606,
+                                                                                  stringDbVersion = "10",
+                                                                                  idsColumnName = 'ontologyId',
+                                                                                  rootColumnName = NULL,
+                                                                                  listOfEnsembleIdColumnName = 'ensembleIds')
     head(chebiIdsToReactomePathwaysAndToStringNeighbours)
 
     gmtGroupsFilePath <- paste(find.package("ONION"),"/example/nm-groups.txt", sep = "")
@@ -98,6 +106,8 @@ test_that("NewOnionApiWorkflow test", {
     permutationTestsResults <- ONION::makePermutationTestOnCCA(XDataFrame = XDF, YDataFrame = YDF, 17, 2, 50, countedCCA = ccaResults1)
 
     plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome[4,]$ccaResults[[1]])
+
+    mccReactome[4,]$ccaPermutationTestResults
 
     p <- recordPlot()
 

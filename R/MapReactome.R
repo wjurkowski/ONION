@@ -9,7 +9,12 @@ clusterUsingOntology <- function(chebiIdsDataFrame, rootColumnName, ontologyRepr
 # NEW PUBLIC API:
 mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyId='9606', idsColumnName = 'ontologyId', rootColumnName = 'root') {
     # x <- c("supp", "dose")
-    chebiIdsToEnsembleIds <- ddply(.data = chebiOntologyIds, c(idsColumnName, rootColumnName), .fun = function(vectorElement) {
+    if (is.null(rootColumnName)) {
+        columnsUseInIteration <- c(idsColumnName)
+    } else {
+        columnsUseInIteration <- c(idsColumnName, rootColumnName)
+    }
+    chebiIdsToEnsembleIds <- ddply(.data = chebiOntologyIds, columnsUseInIteration, .fun = function(vectorElement) {
 
         print(as.character(vectorElement[1, c(idsColumnName)]))
         idToCheck <- as.character(strsplit(as.character(vectorElement[1, c(idsColumnName)]), ":")[[1]][2])
@@ -22,12 +27,12 @@ mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyI
         pathwayIds <- getPathwaysIdsForChebiUnderOrganism(idToCheck, taxonIdToReactomeCodes[[organismTaxonomyId]]$speciesCode)
         ensembleIds <- getEnsemblIdsForPathwayIds(pathwayIds)
         uniProtIds <- getUniProtIdsForPathwayIds(pathwayIds)
-        genesSymbols <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
+        genesSymbolsFromEnsemble <- getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage(ensembleIds, organismTaxonomyId = organismTaxonomyId)
         genesSymbolsFromUniProt <- getSymbolsBaseOnUniProtIdsUsingMyGenePackage(uniProtIds, organismTaxonomyId = organismTaxonomyId)
         chebiIdToEnsembleIds <- data.frame('ensembleIds' = I(list(ensembleIds)),
                                            'uniProtIds' = I(list(uniProtIds)),
                                            'reactomeIds' = I(list(pathwayIds)),
-                                           'genesSymbols' = I(list(genesSymbols)),
+                                           'genesSymbolsFromEnsemble' = I(list(genesSymbolsFromEnsemble)),
                                            'genesSymbolsFromUniProt' = I(list(genesSymbolsFromUniProt)))
         chebiIdToEnsembleIds
     })
@@ -60,9 +65,14 @@ taxonIdToReactomeCodes[['9823']] <- list(speciesName='Sus scrofa', speciesCode='
 
 # NEW PUBLIC API
 getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9606, stringDbVersion = "10", idsColumnName = 'ontologyId', rootColumnName = 'root', listOfEnsembleIdColumnName = 'ensembleIds') {
+    if (is.null(rootColumnName)) {
+        columnsUseInIteration <- c(idsColumnName)
+    } else {
+        columnsUseInIteration <- c(idsColumnName, rootColumnName)
+    }
     string_db <- STRINGdb$new( version = stringDbVersion, species = stringOrganismId)
     chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways[idsColumnName] == 0, ]
-    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, c(idsColumnName, rootColumnName), .fun = function(dfElement) {
+    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, columnsUseInIteration, .fun = function(dfElement) {
         returnNeighbourVector <- character(length = 0)
         stringGenesSymbols <- character(length = 0)
         if (0 == length(dfElement[1, listOfEnsembleIdColumnName][[1]])) {
@@ -266,7 +276,7 @@ makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTest
 
 
 # NEW PUBLIC API
-makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbols', groupsDataDF, mappingDataDF){
+makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbolsFromEnsemble', groupsDataDF, mappingDataDF){
     ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {
         print("???????????????????")
         print(dfElement)
@@ -418,7 +428,7 @@ makePermutationTestOnPLS <- function(XDataFrame, YDataFrame, numberOfRowsForTest
 }
 
 # NEW PUBLIC API
-makePLSOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbols', groupsDataDF, mappingDataDF){
+makePLSOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbolsFromEnsemble', groupsDataDF, mappingDataDF){
     ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {
         print("???????????????????")
         print(dfElement)
