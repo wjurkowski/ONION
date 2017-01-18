@@ -1,23 +1,23 @@
 
 firstExistsInReactomeChebiOntology <- function(baseData, rootColumnName) {
-    print("firstExistsInReactomeChebiOntology")
-    print(as.character(baseData[, rootColumnName]))
+    # print("firstExistsInReactomeChebiOntology")
+    # print(as.character(baseData[, rootColumnName]))
     firstExistsInReactomeChebiOntologyDataFrame <- ldply(as.character(baseData[, rootColumnName]), function(dataRow) {
-        print("firstExistsInReactomeChebiOntology:BEGINING")
+        # print("firstExistsInReactomeChebiOntology:BEGINING")
         child <- 0
         parent <- 0
-        str(dataRow)
-        print(dataRow)
+        # str(dataRow)
+        # print(dataRow)
         # print()
         if (checkIfPathwayIdExistsForChEBIId(strsplit(as.character(dataRow), ":")[[1]][2])) {
             child <- 1
             parent <- 1
         } else {
-            print("firstExistsInReactomeChebiOntology:CHILDREN-PARENTS")
+            # print("firstExistsInReactomeChebiOntology:CHILDREN-PARENTS")
             children <- getChEBIOntologyChildren(strsplit(as.character(dataRow), ":")[[1]][2])
             parents <- getChEBIOntologyParents(strsplit(as.character(dataRow), ":")[[1]][2])
-            print(children)
-            print(parents)
+            # print(children)
+            # print(parents)
             if (nrow(children) >= 1) {
                 for (i in 1:nrow(children)) {
                     # print(children[i, rootColumnName])
