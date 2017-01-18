@@ -70,7 +70,10 @@ devtools::build_vignettes()
 devtools::build()
 devtools::build(binary = TRUE, args = c('--preclean'))
 devtools::install()
+vignette("ONION")
 
 #TODO: Continous delivery!
 
 #TODO: Set up roxygen2 to autogeneration of manual.
+
+packageVersion("mygene")
