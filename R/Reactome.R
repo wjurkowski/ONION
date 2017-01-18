@@ -108,8 +108,8 @@ getUniProtRefSeqs <- function() {
 
 #Additional (local) API methods
 checkIfPathwayIdExistsForChEBIId <- function(ChEBIId) {
-    print("checkIfPathwayIdExistsForChEBIId")
-    print(ChEBIId)
+    # print("checkIfPathwayIdExistsForChEBIId")
+    # print(ChEBIId)
     if (0 == length(ChEBIId)) {
         FALSE
     } else {
