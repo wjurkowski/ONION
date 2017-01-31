@@ -1,0 +1,324 @@
+---
+title: "ONION"
+author: "Monika Piwowar, Wiktor Jurkowski, Ewa Gajda, Cezary Turek"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ONION}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+```{r global_options, include=TRUE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, error = TRUE)
+```
+
+# Table of Contents
+i. [About ONION](#about-onion)
+i. [ONION workflow](#onion-workflow)
+  * 1. [Data input](#input-data)
+  * 2. [Cluster molecules with ChEBI Ontology](#chebi-ontology)
+  * 3. [Map molecules on Reactome](#use-reactome)
+  * 4. [Expand gene clusters with STRING DB](#use-string-db)
+  * 5. [Define group](#define-goups)
+  * 6. [Lalalala lala](#define-groups-of-genes-and-metabolites)
+  * 7. [Multivariate Statistical Analysis](#statistical-analysis)
+    * a. [CCA - Canonical Correlation Analysis](#cca---canonical-correlation-analysis)
+    * b. [PLS - Partial Least Squares Regression](#pls---partial-least-squares-regression)
+ii. [Methods in deatils](#methods-in-deatils)
+  * 1. [clasterUsingOntology()](#clasterusingontology())
+
+
+## About ONION
+ONION provides knowedge driven data regularisation to facilitate multivariate analysis of 'omics' data.
+
+## ONION Workflow
+Below you will find ONION workflow described step by step. By following these steps and using examplary data included in this package user should get the same results as shown in this vignette. 
+
+### Data input
+To start work with ONION you need to provide two 'omics' data sets in data frame form. DF can be created from files as in \example directory under package insallation directory. This files are in tab delimited files with headers (colnames and rownames). Files are named `nm-transcriptomics.txt`, `nm-lipidomics.txt` and `nm-groups.txt`.
+
+Below you can find first few lines of files presented in form of data frame. As you can see all of them have heades and colnames. To find them localization please run `find.package("ONION")` after package loading `library(ONION)`.
+
+
+```{r, results = 'asis'} 
+    pathToFileWithLipidomicsData <- paste(
+        find.package("ONION"),
+        "/example/nm-lipidomics.txt", 
+        sep = "")
+    lipidomicsInputData <- read.table(pathToFileWithLipidomicsData, header = TRUE)
+    lipidomicsInputDf <- head(lipidomicsInputData, 6)
+    knitr::kable(lipidomicsInputDf[1:7], caption = "Lipidomisc data")
+    
+    pathToFileWithTranscriptomicsData <- paste(
+        find.package("ONION"),
+        "/example/nm-transcriptomics.txt", 
+        sep = "")
+    transcriptomicsInputData <- read.table(pathToFileWithTranscriptomicsData, header = TRUE)
+    transcriptomicsInputDf <- head(transcriptomicsInputData, 6)
+    knitr::kable(transcriptomicsInputDf[1:7], caption = "Transcriptomics data")
+```
+
+
+### Cluster molecules with ChEBI Ontology
+
+The first step is to load the input file. When this is done then we are ready to map ChEBI identifiers contained in the file to Reactome database by searching of ontologically related molecules present in Reactome's pathways. The output includes six rows of mapped ids.
+
+```{r, echo=TRUE, results='asis'}
+    clusteredSmallMolecules <- ONION::clusterUsingOntology(
+        chebiIdsDataFrame = lipidomicsInputDf,
+        rootColumnName = "ChEBI",
+        ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
+```
+
+```{r, echo=FALSE, results='asis'}
+    knitr::kable(head(clusteredSmallMolecules, 6))
+```
+
+The result table represent mapping of all small molecules to respective parents and children of ChEBI ontology: "root" denotes source IDs; 1 - ID already exists in Reactome, if not but there is an alternative in the form of child or parent in ChEBI Ontology, ONION put its id under proper column. If we can not find root id and can not find any parent or children for it, ONION surround it by 0.
+
+Next step is merge of children, roots and parents. For now we have only one method available `ONION::mergeChEBIOntologyWithChildFavoring()`, but you can simply develop yourself. Our function merge table with children favoring.
+
+```{r, echo=TRUE, results='asis'}
+    mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(
+        clusteredSmallMolecules, 
+        rootColumnName = 'root')
+```
+
+```{r, echo=FALSE, results='asis'}
+    knitr::kable(head(mergedSmallMolecules, 6))
+```
+
+Results include ontologyId column which contains chebi ids used in following procedure, Root column show from which point we start ontology search. In whoWins you can find R, C, P, N letters which mean Root, Child, Parent, None.
+
+
+### Map molecules on Reactome
+Once the result table of merge operation is generated, you can use it to find genes which are in the same pathway as small molecules with specific ChEBI identifiers. Currently the only supported source of canonical pathways is Reactome database.  
+Additionally instead of using dataframe from merge result (mergedSmallMolecules) you can use any dataframe, but then you have to specify a name of the column included ontology IDs:
+
+```{r, echo=FALSE, results='asis'}
+    knitr::kable(data.frame(
+        mergedSmallMolecules[1:4, c("ontologyId"), drop = FALSE], 
+        XYZ = c("1","2","3","4"))
+    )
+```
+
+As a result you recive dataframe presented below:
+
+```{r, echo=TRUE, results='hide'}
+    chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(
+        chebiOntologyIds = mergedSmallMolecules[, c("ontologyId"), drop = FALSE], 
+        organismTaxonomyId = '9606', 
+        idsColumnName = "ontologyId", 
+        rootColumnName = NULL)
+    chebiIdsToReactomePathwaysWithRoot <- ONION::mapReactomePathwaysUnderOrganism(
+        chebiOntologyIds = mergedSmallMolecules[, c("ontologyId", "root"), drop = FALSE], 
+        organismTaxonomyId = '9606', 
+        idsColumnName = "ontologyId", 
+        rootColumnName = "root")
+```
+Result of `ONION::mapReactomePathwaysUnderOrganism` is DF, but this DF is complicated, which include lists as cells. This DF contains respectively:
+
+- ontologyId - ChEBI ids used in the calculation, it is taken from ChEBI ontology base on root,
+- root - ChEBIs ids given by user,
+- ensembleIds - List including vector of Ensemble's Ids,
+- uniProtIds - List including vector of UniProt's Ids,
+- ensembleIds - List including vector of Ensemble's Ids,
+- reactomeIds - List including vector of pathway's ids from Reactome DB,
+- genesSymbolsFromEnsemble - List including vector of gen's symbols from Reactome DB base on pathway and Ensemble's Ids,
+- genesSymbolsFromUniProt - List including vector of gen's symbols from Reactome DB base on pathway and UniProt's Ids,
+
+```{r, echo=FALSE, results='asis'}
+    oneRowDf <- chebiIdsToReactomePathways[6,]
+    rownames(oneRowDf) <- NULL
+    knitr::kable(oneRowDf)
+```
+
+
+### Use STRING DB
+
+When you have results from Reactome step, then you are ready to use STRING DB step. In this part you search for any extra interactions of gens which you find in Reactome. STRING calls them neighbours. To do it just put results achived from Reactome to `ONION::getStringNeighbours()` method. This function produce dataframe. Below one row of this this dataframe is presented:
+
+```{r, echo=TRUE, results='hide'}
+chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(
+    chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:15756",],
+    stringOrganismId = 9606,
+    stringDbVersion = "10",
+    idsColumnName = 'ontologyId',
+    rootColumnName = NULL,
+    listOfEnsembleIdColumnName = 'ensembleIds')
+```
+
+DF returned from this method is also a complicated one. It includes the same columns as previous and two extra columns. All of theme are from STRING database and has some edges (connections) with gens from ensembleIds column:
+
+- stringIds -
+- stringGensSymbols - 
+
+
+```{r, echo=FALSE, results='asis'}
+    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringIds[[1]] <- chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringIds[[1]][1:50]
+    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringGenesSymbols[[1]] <-
+    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringGenesSymbols[[1]][1:45]
+    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$ensembleIds[[1]] <-
+    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$ensembleIds[[1]][1:11]
+    knitr::kable(
+        chebiIdsToReactomePathwaysAndToStringNeighbours[
+            chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]
+    )
+```
+
+
+### Define groups of genes and metabolites
+This step joins files with data to analyse with results of Reactome step and/or results of STRING step. 
+
+
+### Define goups
+Groups are defined in data frame. ONION has method to create DF from GMT file, so you can use `readGroupsAsDf()` to do it. Example file of grouping is under example directory. 
+
+```{r, echo=TRUE, results='asis'}
+    gmtGroupsFilePath <- paste(find.package("ONION"),"/example/nm-groups.txt", sep = "")
+    groups <- ONION::readGroupsAsDf(pathToFileWithGroupDefinition = gmtGroupsFilePath)
+```
+
+```{r, echo=FALSE, results='asis'}
+    knitr::kable(groups)
+```
+
+
+####User selected genes and metabolites
+Optionally, the analysis could be executed by hand picked selections of genes and metabolites
+
+```{r, echo=TRUE, results='asis'}
+#select small molecules
+lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:27432",]$root
+lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:73705",]$root
+joinLip <- c(as.character(lip1), as.character(lip2))
+
+#use Reactome genes mapped to selected small molecules
+reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:15756",]$genesSymbolsFromEnsemble[[1]]
+reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:16015",]$genesSymbolsFromEnsemble[[1]]
+joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]
+```
+
+### Functional Ineractions DF
+You can create a functional interactions data frame by using this method:
+
+```{r, echo=TRUE, results='asis'}
+    functionalInteractions <- ONION::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
+```
+
+```{r, echo=FALSE, results='asis'}
+    knitr::kable(head(functionalInteractions, 6))
+```
+
+### Statistical Analysis
+
+ONION provides two statistical methods to analyse those data:
+
+- CCA - Canonical Correlation Analysis
+- PLS - Partial Least Squares Regression
+
+#### CCA - Canonical Correlation Analysis
+
+Calculate CCA by hand:
+
+
+```{r, echo=TRUE, results='asis'}
+    pathToExampleFileWithXData <- paste(find.package("ONION"),"/example/nm-transcriptomics.txt", sep = "")
+    pathToExampleFileWithYData <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
+
+    XDF <- read.table(pathToExampleFileWithXData, header = TRUE);
+    YDF <- read.table(pathToExampleFileWithYData, header = TRUE);
+
+    ccaResults1 <- ONION::makeCanonicalCorrelationAnalysis(
+        xNamesVector = joinRecatomeTrans,
+        yNamesVector = joinLip,
+            XDataFrame = XDF,
+            YDataFrame = YDF)
+```
+
+
+```{r, fig.show='hold', fig.width=6, fig.height=6}
+    ONION::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
+```
+
+Calculate CCA on groups:
+
+```{r, echo=TRUE, results='hide'}
+    mccReactome <- ONION::makeCCAOnGroups(
+        groupsDefinitionDF = groups, 
+        mappingDF = chebiIdsToReactomePathwaysWithRoot, 
+        groupsDataDF = YDF, 
+        mappingDataDF = XDF)
+
+``` 
+
+Inside the makeCCAOnGroups functions the permutatuin test is automaticly done. To do it yourself on your data do:
+
+```{r, echo=FALSE, results='hide'}
+    permutationTestsResults <- ONION::makePermutationTestOnCCA(
+        XDataFrame = XDF, 
+        YDataFrame = YDF, 17, 2, 50, 
+        countedCCA = ccaResults1)
+```
+
+To take data from grouped CCA you should know a little the structure, it is like that:
+```{r, echo=FALSE, results='hide'}
+mccReactome$Molecules[1]
+mccReactome$right[[1]]
+mccReactome$left[[1]]
+mccReactome$ccaResults[[1]]
+mccReactome$ccaPermutationTestResults[[1]]
+```
+
+```{r, fig.show='hold', fig.width=6, fig.height=6}
+    ONION::plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome$ccaResults[[1]])
+```
+#### PLS - Partial Least Squares Regression
+
+```{r, echo=FALSE, results='hide'}
+    PLSResult1 <- ONION::makePartialLeastSquaresRegression(
+        joinRecatomeTrans,
+        joinLip,
+        XDataFrame = XDF,
+        YDataFrame = YDF)
+```
+
+```{r, fig.show='hold', fig.width=6, fig.height=6}
+    ONION::plotRmsepForPLS(PLSResult1$training)
+```  
+
+```{r, fig.show='hold', fig.width=6, fig.height=6}
+    ONION::plotRegression(PLSResult1$training, ncompValue = 10)
+```
+
+The same but on groups defined by user.
+```{r, echo=TRUE, results='asis'}
+    groupPlsReactome <- ONION::makePLSOnGroups(
+        groupsDefinitionDF = groups, 
+        mappingDF = chebiIdsToReactomePathwaysWithRoot, 
+        groupsDataDF = YDF, 
+        mappingDataDF = XDF)
+
+```
+
+How to take counted values from results:
+```{r, echo=FALSE, results='hide'}
+groupPlsReactome$Molecules[1]
+groupPlsReactome$right[[1]]
+groupPlsReactome$left[[1]]
+groupPlsReactome$plsResults[[1]]
+groupPlsReactome$plsPermutationTestResults[[1]]
+```
+How to use it to plot:
+```{r, fig.show='hold', fig.width=6, fig.height=6, echo=TRUE}
+    ONION::plotRmsepForPLS(groupPlsReactome$plsResults[[1]]$training)
+```
+```{r, fig.show='hold', fig.width=6, fig.height=6, echo=TRUE}
+    ONION::plotRegression(groupPlsReactome$plsResults[[1]]$training, ncompValue = 10)
+```
+
+
+
