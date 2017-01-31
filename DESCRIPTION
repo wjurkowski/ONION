@@ -27,9 +27,8 @@ Imports:
     BiocCheck,
     CCA,
     gridExtra,
-    mygene (== 1.10.0),
-    ChemmineR,
-    ChemmineOB
+    mygene (>= 1.10.0),
+    ChemmineR
 #: Packages with this flow dependencies: A -> B -> C and A -> C should be on Depends list.
 Depends:
     R (>= 3.3.0),

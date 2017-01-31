@@ -16,7 +16,6 @@ import(mygene)
 import(gridExtra)
 import(CCA)
 import(ChemmineR)
-import(ChemmineOB)
 
 # Export NEW PUBLIC API
 export(clusterUsingOntology)
