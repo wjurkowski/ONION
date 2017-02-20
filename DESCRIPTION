@@ -12,12 +12,11 @@ Maintainer: Cezary Turek <cezary.turek@gmail.com>
 Description: Packacge description, what ONION does.
 License: GNU GPL
 LazyData: TRUE
-#: Packages which are imported throught NAMESPASE file. (ChemmineOB)
+#: #: Packages with this flow dependencies: A -> B -> C and A -> C should be on Depends list.
 Imports:
     RCurl,
     RJSONIO,
     XML,
-    testthat,
     pls,
     corrplot,
     yacca,
@@ -29,14 +28,14 @@ Imports:
     gridExtra,
     mygene (>= 1.10.0),
     ChemmineR
-#: Packages with this flow dependencies: A -> B -> C and A -> C should be on Depends list.
 Depends:
     R (>= 3.3.0),
     igraph,
     plyr (>= 1.8.4)
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat
 VignetteBuilder: knitr
 Collate:
     'Utils.R'
