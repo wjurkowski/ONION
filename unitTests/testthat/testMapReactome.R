@@ -31,9 +31,10 @@ test_that("NewOnionApiWorkflow test", {
     head(mergedSmallMolecules)
 
     chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules, organismTaxonomyId = '9606')
-    chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[3,], organismTaxonomyId = '9606')
-    chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[4,], organismTaxonomyId = '9606')
-    chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[1,], organismTaxonomyId = '9606')
+    chebiIdsToReactomePathways3 <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[3,], organismTaxonomyId = '9606')
+    chebiIdsToReactomePathways4 <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[4,], organismTaxonomyId = '9606')
+    chebiIdsToReactomePathways1 <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[1,], organismTaxonomyId = '9606')
+    chebiIdsToReactomePathways2 <- ONION::mapReactomePathwaysUnderOrganism(chebiOntologyIds = mergedSmallMolecules[2,], organismTaxonomyId = '9606')
     head(chebiIdsToReactomePathways)
 
     functionalInteractions <- ONION::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
@@ -172,4 +173,3 @@ test_that("NewOnionApiWorkflow test", {
     returnNeighbourVector <- string_db$get_neighbors(stringId1)
     duplicated(returnNeighbourVector)
 })
-

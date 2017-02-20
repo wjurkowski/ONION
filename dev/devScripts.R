@@ -77,3 +77,6 @@ vignette("ONION")
 #TODO: Set up roxygen2 to autogeneration of manual.
 
 packageVersion("mygene")
+
+devtools::use_testthat()
+devtools::test()
