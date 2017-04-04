@@ -1,13 +1,12 @@
 #Has few conflicts in methods.
 # TODO : Use importFrom, will remove warnings.
+# import(corrplot)
 import(pls)
-import(corrplot)
 import(yacca)
 import(FRCC)
 import(STRINGdb)
 import(RCurl)
 import(BiocCheck)
-import(testthat)
 import(httr)
 import(XML)
 import(RJSONIO)
@@ -16,6 +15,10 @@ import(mygene)
 import(gridExtra)
 import(CCA)
 import(ChemmineR)
+import(utils)
+importFrom("grDevices", "dev.off", "png")
+importFrom("graphics", "par")
+importFrom("stats", "biplot", "predict")
 
 # Export NEW PUBLIC API
 export(clusterUsingOntology)
