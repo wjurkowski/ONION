@@ -37,6 +37,7 @@ setDeveloperEnvironment <- function() {
 
 #TODO: Set up devtools to smart and fast builds.
 devtools::install_github("hadley/devtools")
+devtools::install_github("Bioconductor-mirror/mygene", force = TRUE)
 install.packages("rstudioapi")
 library(devtools)
 devtools::has_devel()
@@ -70,6 +71,7 @@ devtools::build_vignettes()
 devtools::build()
 devtools::build(binary = TRUE, args = c('--preclean'))
 devtools::install()
+vignette("ONION")
 vignette("ONION")
 
 #TODO: Continous delivery!

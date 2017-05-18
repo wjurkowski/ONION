@@ -19,6 +19,7 @@ import(utils)
 importFrom("grDevices", "dev.off", "png")
 importFrom("graphics", "par")
 importFrom("stats", "biplot", "predict")
+import(igraph)
 
 # Export NEW PUBLIC API
 export(clusterUsingOntology)
