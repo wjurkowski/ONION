@@ -140,8 +140,9 @@ getSymbolsBaseOnEnsemblGensIdsUsingMyGenePackage <- function(gensIdsVector, orga
     # genes <- getGenes(gensIdsVector, fields = "all")
     # genes$symbol
     # genes$ensembl.protein
-    # print(organismTaxonomyId)
-    additionalInformationBaseOnEnsemblGenId <- invisible(queryMany(gensIdsVector, fields = c("symbol","ensembl.protein"),
+    # gensIdsVectorGlobal <<- gensIdsVector
+    # print(gensIdsVector)
+    additionalInformationBaseOnEnsemblGenId <- invisible(queryMany(gensIdsVector, scopes = 'ensembl.gene', fields = c("symbol","ensembl.protein"),
                                                          species = organismTaxonomyId))
     # print(additionalInformationBaseOnEnsemblGenId)
     equivalentEnsemlProteinsIdsVector <- unlist(

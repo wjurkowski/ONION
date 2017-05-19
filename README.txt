@@ -8,5 +8,5 @@ install.packages("/home/koralgooll/doktorat/Rpackages/ONION_0.0.1.tar.gz", repos
 
 I case of some problem, at first install packages from DESCRIPTION file please:
 igraph, ChebiAPI, plyr, ReactomeAPI
-RCurl, RJSONIO, XML, testthat, pls, corrplot, yacca, FRCC, httr, biomaRt, STRINGdb, BiocCheck, ChemmineR, CCA, gridExtra, mygene
+RCurl, RJSONIO, XML, testthat, pls, yacca, FRCC, httr, biomaRt, STRINGdb, BiocCheck, ChemmineR, CCA, gridExtra, mygene
 To installation you can use setDeveloperEnvironment() function from dev/devScripts.R, but remember that you need to look at console and type a and y on quesrions.
