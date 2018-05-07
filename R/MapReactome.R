@@ -121,12 +121,12 @@ mapFromStringIdsToEnsembleIds <- function(vactofOfStringIds) {
 
 # NEW API.
 getEnsemblProteinsIdsBaseOnEnsemblGensIdsUsingMyGenePackage <- function(gensIdsVector, organismTaxonomyId) {
-    # genes <- getGenes(gensIdsVector, fields = "all")
-    # genes$symbol
-    # genes$ensembl.protein
-    additionalInformationBaseOnEnsemblGenId <- invisible(queryMany(gensIdsVector, fields = c("symbol","ensembl.protein"),
-                                                         species = organismTaxonomyId))
-    equivalentEnsemlProteinsIds <- unlist(additionalInformationBaseOnEnsemblGenId$ensembl.protein)
+
+    additionalInformationBaseOnEnsemblGenId <- invisible(
+        queryMany(qterms = gensIdsVector[[1]], scopes = c("ensembl.gene"),
+                  fields = c("symbol","ensembl.protein")))
+    equivalentEnsemlProteinsIds <- unlist(additionalInformationBaseOnEnsemblGenId$ensembl)
+
     equivalentEnsemlProteinsIdsVector <- lapply(equivalentEnsemlProteinsIds, function(characterListElement){
         characterListElement
     });
