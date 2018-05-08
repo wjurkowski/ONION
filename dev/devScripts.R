@@ -30,7 +30,6 @@ setDeveloperEnvironment <- function() {
     biocLite('STRINGdb')
     biocLite('BiocCheck')
     biocLite('S4Vectors')
-    biocLite('ChemmineR')
     biocLite('ChemmineOB')
     biocLite("mygene")
 }
@@ -54,7 +53,7 @@ BiocInstaller::biocLite()
 biocLite("BiocCheck")
 library(BiocCheck)
 #Do BiocCheck on development version of package, not installed. :P
-BiocCheck("/home/koralgooll/doktorat/Rpackages/ONION")
+BiocCheck("/home/koralgooll/doktorat/Rpackages/OmicsON")
 #Not this directory:
 find.package("ReactomeAPI")
 # KNOWN BUG
@@ -66,13 +65,13 @@ find.package("BiocCheck")
 #Do what is in instruction. Copy that file please. :)
 
 # Build with vignetts.
-devtools::use_vignette(name = "ONIONnot")
+devtools::use_vignette(name = "OmicsON")
 devtools::build_vignettes()
 devtools::build()
 devtools::build(binary = TRUE, args = c('--preclean'))
 devtools::install()
-vignette("ONION")
-vignette("ONION")
+vignette("OmicsON")
+vignette("OmicsON")
 
 #TODO: Continous delivery!
 

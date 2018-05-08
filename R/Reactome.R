@@ -101,9 +101,9 @@ getUniProtRefSeqs <- function() {
 
 #GlobalForPerformance
 .onLoad <- function(libname, pkgname) {
-    chEBIToReactomeLowestLevel <<- read.table(paste(find.package("ONION"), "resources/ChEBI2Reactome.txt", sep = "/"))
-    Ensembl2ReactomeLowestLevel <<- read.table(paste(find.package("ONION"), "resources/Ensembl2Reactome.txt", sep = "/"))
-    UniProt2ReactomeLowestLevel <<- read.table(paste(find.package("ONION"), "resources/UniProt2Reactome.txt", sep = "/"))
+    chEBIToReactomeLowestLevel <<- read.table(paste(find.package("OmicsON"), "resources/ChEBI2Reactome.txt", sep = "/"))
+    Ensembl2ReactomeLowestLevel <<- read.table(paste(find.package("OmicsON"), "resources/Ensembl2Reactome.txt", sep = "/"))
+    UniProt2ReactomeLowestLevel <<- read.table(paste(find.package("OmicsON"), "resources/UniProt2Reactome.txt", sep = "/"))
 }
 
 #Additional (local) API methods

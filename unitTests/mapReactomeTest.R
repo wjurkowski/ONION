@@ -1,1 +1,0 @@
-#Try to move UnitTest here. Now tests have to be under testthat, because of libraty. :(

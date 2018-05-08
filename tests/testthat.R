@@ -1,4 +1,4 @@
 library(testthat)
-library(ONION)
+library(OmicsON)
 
-test_check("ONION")
+test_check("OmicsON")

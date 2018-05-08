@@ -12,7 +12,7 @@ devtools::install_github("hadley/devtools", force = TRUE)
 # build dependencies
 biocLite(c("igraph", "pls", "corrplot", "yacca", "FRCC", "RCurl",
            "httr", "RJSONIO", "XML", "S4Vectors", "CCA", "gridExtra",
-           "biomaRt", "STRINGdb", "BiocCheck", "S4Vectors", "ChemmineR",
+           "biomaRt", "STRINGdb", "BiocCheck", "S4Vectors",
            "ChemmineOB", "mygene"))
 
 # test dependencies
@@ -20,9 +20,9 @@ biocLite("testthat")
 
 
 ###### Vignete Build ######
-devtools::use_vignette(name = "ONION")
+devtools::use_vignette(name = "OmicsON")
 devtools::build_vignettes()
-vignette("ONION")
+vignette("OmicsON")
 
 
 ###### Unit Tests ######
@@ -60,12 +60,12 @@ sessionInfo()
 R.Version()
 cat("\014")
 packageVersion("STRINGdb")
-find.package("ONION")
+find.package("OmicsON")
 
 
 ###### ??? ######
 devtools::build(binary = TRUE, args = c('--preclean'))
-devtools::build("/home/koralgooll/doktorat/Rpackages/ONION/")
+devtools::build("/home/koralgooll/doktorat/Rpackages/OmicsON/")
 devtools::install()
 devtools::reload()
 install.packages("rstudioapi")

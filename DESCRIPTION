@@ -1,6 +1,6 @@
-Package: ONION
+Package: OmicsON
 Type: Package
-Title: ONION is a package implementing workflow for finding associations acrossomics data sets
+Title: OmicsON is a package implementing workflow for finding associations acrossomics data sets
 Version: 0.99.0
 Date: 2015-09-25
 Authors@R: c(
@@ -9,7 +9,7 @@ Authors@R: c(
     person("Ewa", "Gajda", email = "Ewaa.Gajda@gmail.com", role =  "aut"),
     person("Cezary", "Turek", email = "Cezary.Turek@gmail.com", role =  c("aut", "cre")))
 Maintainer: Cezary Turek <cezary.turek@gmail.com>
-Description: Packacge description, what ONION does.
+Description: Packacge description, what OmicsON does.
 License: GNU GPL
 LazyData: TRUE
 #: #: Packages with this flow dependencies: A -> B -> C and A -> C should be on Depends list.
@@ -26,7 +26,6 @@ Imports:
     CCA,
     gridExtra,
     mygene (>= 1.10.0),
-    ChemmineR,
     utils,
     stats
 Depends:

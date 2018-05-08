@@ -223,21 +223,21 @@ makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFr
                 yacca::cca(X, Y)
             },
             error = function(cond) {
-                message("ONION - Included CCA can not solve task.")
+                message("OmicsON - Included CCA can not solve task.")
                 message("Original message (yacca):")
                 message(cond)
                 # Choose a return value in case of error
                 return(NA)
             },
             warning = function(cond) {
-                message("ONION - Included CCA present warning.")
+                message("OmicsON - Included CCA present warning.")
                 message("Original message (yacca):")
                 message(cond)
                 # Choose a return value in case of warning
                 return(NULL)
             },
             finally = {
-                message("ONION - CCA (yacca) finished.")
+                message("OmicsON - CCA (yacca) finished.")
             }
         )
     }
@@ -257,7 +257,7 @@ makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTest
     for (i in 1:numberOfIterations) {
         xNV <- as.character(XDataFrame[sample(nrow(XDataFrame), numberOfRowsForTestOnX), ][,1])
         yNV <- as.character(YDataFrame[sample(nrow(YDataFrame), numberOfRowsForTestOnY), ][,1])
-        ccaResult <- ONION::makeCanonicalCorrelationAnalysis(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
+        ccaResult <- OmicsON::makeCanonicalCorrelationAnalysis(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
         # print("++++++++++++++++++++++++++++++++++")
         # print.default(ccaResult)
         if (is.na(ccaResult) || is.null(ccaResult)) {
@@ -303,7 +303,7 @@ makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName
         leftSideIdsToAnalys <- mappingDF[mappingDF[[leftMappingColumnName]] %in% rightSideIdsToAnalys,][[rightMappingColumnName]]
         leftSideIdsToAnalys <- unique(unlist(leftSideIdsToAnalys))
 
-        ccaResults <- ONION::makeCanonicalCorrelationAnalysis(
+        ccaResults <- OmicsON::makeCanonicalCorrelationAnalysis(
             xNamesVector = leftSideIdsToAnalys,
             yNamesVector = rightSideIdsToAnalys,
             XDataFrame = mappingDataDF,
@@ -378,21 +378,21 @@ makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
             PLSResultsList
         },
         error = function(cond) {
-            message("ONION - Included PLS can not solve task.")
+            message("OmicsON - Included PLS can not solve task.")
             message("Original message (pls):")
             message(cond)
             # Choose a return value in case of error
             return(NA)
         },
         warning = function(cond) {
-            message("ONION - Included PLS present warning.")
+            message("OmicsON - Included PLS present warning.")
             message("Original message (pls):")
             message(cond)
             # Choose a return value in case of warning
             return(NULL)
         },
         finally = {
-            message("ONION - PLS (pls) finished.")
+            message("OmicsON - PLS (pls) finished.")
         }
     )
     PLSResults
@@ -409,7 +409,7 @@ makePermutationTestOnPLS <- function(XDataFrame, YDataFrame, numberOfRowsForTest
     for (i in 1:numberOfIterations) {
         xNV <- as.character(XDataFrame[sample(nrow(XDataFrame), numberOfRowsForTestOnX), ][,1])
         yNV <- as.character(YDataFrame[sample(nrow(YDataFrame), numberOfRowsForTestOnY), ][,1])
-        plsResult <- ONION::makePartialLeastSquaresRegression(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
+        plsResult <- OmicsON::makePartialLeastSquaresRegression(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
         # print("++++++++++++++++++++++++++++++++++")
         # print.default(ccaResult)
         if (is.na(plsResult) || is.null(plsResult)) {

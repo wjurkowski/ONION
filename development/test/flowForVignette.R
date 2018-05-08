@@ -1,23 +1,23 @@
 
-pathToFileWithLipidomicsData <- system.file(package="ONION", "example", "nm-lipidomics.txt")
+pathToFileWithLipidomicsData <- system.file(package="OmicsON", "example", "nm-lipidomics.txt")
 
 lipidomicsInputData <- read.table(pathToFileWithLipidomicsData, header = TRUE)
 lipidomicsInputDf <- head(lipidomicsInputData, 6)
 knitr::kable(lipidomicsInputDf[1:7], caption = "Lipidomisc data")
 
-pathToFileWithTranscriptomicsData <- system.file(package="ONION", "example", "nm-transcriptomics.txt")
+pathToFileWithTranscriptomicsData <- system.file(package="OmicsON", "example", "nm-transcriptomics.txt")
 
 transcriptomicsInputData <- read.table(pathToFileWithTranscriptomicsData, header = TRUE)
 transcriptomicsInputDf <- head(transcriptomicsInputData, 6)
 knitr::kable(transcriptomicsInputDf[1:7], caption = "Transcriptomics data")
 
-clusteredSmallMolecules <- ONION::clusterUsingOntology(
+clusteredSmallMolecules <- OmicsON::clusterUsingOntology(
     chebiIdsDataFrame = lipidomicsInputDf,
     rootColumnName = "ChEBI",
-    ontologyRepresentatnion = ONION::firstExistsInReactomeChebiOntology)
+    ontologyRepresentatnion = OmicsON::firstExistsInReactomeChebiOntology)
 knitr::kable(head(clusteredSmallMolecules, 6))
 
-mergedSmallMolecules <- ONION::mergeChEBIOntologyWithChildFavoring(
+mergedSmallMolecules <- OmicsON::mergeChEBIOntologyWithChildFavoring(
     clusteredSmallMolecules,
     rootColumnName = 'root')
 
@@ -28,12 +28,12 @@ knitr::kable(data.frame(
     XYZ = c("1","2","3","4"))
 )
 
-chebiIdsToReactomePathways <- ONION::mapReactomePathwaysUnderOrganism(
+chebiIdsToReactomePathways <- OmicsON::mapReactomePathwaysUnderOrganism(
     chebiOntologyIds = mergedSmallMolecules[, c("ontologyId"), drop = FALSE],
     organismTaxonomyId = '9606',
     idsColumnName = "ontologyId",
     rootColumnName = NULL)
-chebiIdsToReactomePathwaysWithRoot <- ONION::mapReactomePathwaysUnderOrganism(
+chebiIdsToReactomePathwaysWithRoot <- OmicsON::mapReactomePathwaysUnderOrganism(
     chebiOntologyIds = mergedSmallMolecules[, c("ontologyId", "root"), drop = FALSE],
     organismTaxonomyId = '9606',
     idsColumnName = "ontologyId",
@@ -45,7 +45,7 @@ rownames(oneRowDf) <- NULL
 knitr::kable(oneRowDf)
 
 
-chebiIdsToReactomePathwaysAndToStringNeighbours <- ONION::getStringNeighbours(
+chebiIdsToReactomePathwaysAndToStringNeighbours <- OmicsON::getStringNeighbours(
     chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:15756",],
     stringOrganismId = 9606,
     stringDbVersion = "10",
@@ -65,9 +65,9 @@ knitr::kable(
 )
 
 
-gmtGroupsFilePath <- system.file(package="ONION", "example", "nm-groups.txt")
-# gmtGroupsFilePath <- paste(find.package("ONION"),"/example/nm-groups.txt", sep = "")
-groups <- ONION::readGroupsAsDf(pathToFileWithGroupDefinition = gmtGroupsFilePath)
+gmtGroupsFilePath <- system.file(package="OmicsON", "example", "nm-groups.txt")
+
+groups <- OmicsON::readGroupsAsDf(pathToFileWithGroupDefinition = gmtGroupsFilePath)
 knitr::kable(groups)
 
 #select small molecules
@@ -80,47 +80,47 @@ reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontology
 reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:28875",]$genesSymbolsFromEnsemble[[1]]
 joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]
 
-functionalInteractions <- ONION::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
+functionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
 
 
-pathToExampleFileWithXData <- paste(find.package("ONION"),"/example/nm-transcriptomics.txt", sep = "")
-pathToExampleFileWithYData <- paste(find.package("ONION"),"/example/nm-lipidomics.txt", sep = "")
+pathToExampleFileWithXData <- paste(find.package("OmicsON"),"/example/nm-transcriptomics.txt", sep = "")
+pathToExampleFileWithYData <- paste(find.package("OmicsON"),"/example/nm-lipidomics.txt", sep = "")
 
 XDF <- read.table(pathToExampleFileWithXData, header = TRUE);
 YDF <- read.table(pathToExampleFileWithYData, header = TRUE);
 
-ccaResults1 <- ONION::makeCanonicalCorrelationAnalysis(
+ccaResults1 <- OmicsON::makeCanonicalCorrelationAnalysis(
     xNamesVector = joinRecatomeTrans,
     yNamesVector = joinLip,
     XDataFrame = XDF,
     YDataFrame = YDF)
 
-ONION::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
+OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
 
-mccReactome <- ONION::makeCCAOnGroups(
+mccReactome <- OmicsON::makeCCAOnGroups(
     groupsDefinitionDF = groups,
     mappingDF = chebiIdsToReactomePathwaysWithRoot,
     groupsDataDF = YDF,
     mappingDataDF = XDF)
 
-ONION::plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome$ccaResults[[1]])
+OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome$ccaResults[[1]])
 
-PLSResult1 <- ONION::makePartialLeastSquaresRegression(
+PLSResult1 <- OmicsON::makePartialLeastSquaresRegression(
     joinRecatomeTrans,
     joinLip,
     XDataFrame = XDF,
     YDataFrame = YDF)
 
-ONION::plotRmsepForPLS(PLSResult1$training)
+OmicsON::plotRmsepForPLS(PLSResult1$training)
 
-ONION::plotRegression(PLSResult1$training, ncompValue = 10)
+OmicsON::plotRegression(PLSResult1$training, ncompValue = 10)
 
-groupPlsReactome <- ONION::makePLSOnGroups(
+groupPlsReactome <- OmicsON::makePLSOnGroups(
     groupsDefinitionDF = groups,
     mappingDF = chebiIdsToReactomePathwaysWithRoot,
     groupsDataDF = YDF,
     mappingDataDF = XDF)
 
-ONION::plotRmsepForPLS(groupPlsReactome$plsResults[[1]]$training)
+OmicsON::plotRmsepForPLS(groupPlsReactome$plsResults[[1]]$training)
 
-ONION::plotRegression(groupPlsReactome$plsResults[[1]]$training, ncompValue = 10)
+OmicsON::plotRegression(groupPlsReactome$plsResults[[1]]$training, ncompValue = 10)

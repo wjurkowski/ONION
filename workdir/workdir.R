@@ -7,8 +7,8 @@ xNamesVector = c("15756")
 yNamesVector = c("IDI1", "ACACB", "FDFT1", "SQLE", "SC5D", "MVK", "HMGCS1", "HMGCR", "GPAM", "TM7SF2", "GGPS1", "LSS", "FDPS", "PMVK", "MVD", "FASN", "ELOVL6", "DHCR7", "ABCB4", "ALAS1", "ME1", "TRIB3", "SULT2A1", "CPT1A", "APOA5", "FHL2", "ACADM", "APOA1", "CTGF", "G0S2", "SLC27A1", "HMGCS2", "GRHL1", "CD36", "AGT", "GLIPR1", "CYP1A1", "RGL1", "TNFRSF21", "TIAM2", "PLIN2", "ANKRD1", "FADS1", "ACSL1", "CPT2", "APOA2", "ACOX1", "FABP1", "ABCA1", "PEX11A", "ANGPTL4", "CYP7A1", "NPAS2", "PPARA", "CYP4A11", "TXNRD1", "UGT1A9", "KLF5", "PCK1", "PPARG", "EBF1", "PLIN1", "FABP4", "CEBPB", "LEP", "LPL", "ADIPOQ", "SLC2A4", "CEBPD", "CEBPA", "GCG", "TFB1M", "POLRMT", "SSBP1", "NRF1", "C10orf2", "TFAM", "USP46", "ATP5B", "MTERF1", "SIRT3", "GABPA", "TFB2M", "CYCS", "ESRRA", "POLG2", "CRY1", "F7", "RORA", "AVP", "DBP", "NAMPT", "SERPINE1", "CRY2", "BHLHE41", "NR1D1", "PER2", "BHLHE40", "NOCT", "PER1", "GIP", "SREBF1", "ARNTL", "CLOCK", "NPPA")
 yNamesVector = chebiIdsToReactomePathways[chebiIdsToReactomePathways$chebiId == 27432,]$gensSymbols[[1]]
 
-pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-transcriptomics.txt"
-pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt"
+pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/OmicsON/example/nm-transcriptomics.txt"
+pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/OmicsON/example/nm-lipidomics-valid.txt"
 
 # Where XData = transcriptomicsData and YData = lipidomicsData.
 XData <- readWithoutDuplicates(pathToFileWithXData)
@@ -91,8 +91,8 @@ predict(PLSResults, ncomp = 2, newdata = transposedXData[c("X.TRA2B", "X.AATF")]
 
 transposedXData[c("X.TRA2B", "X.AATF")]
 
-pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-transcriptomics.txt"
-pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/ONION/example/nm-lipidomics-valid.txt"
+pathToFileWithXData = "/home/koralgooll/doktorat/Rpackages/OmicsON/example/nm-transcriptomics.txt"
+pathToFileWithYData = "/home/koralgooll/doktorat/Rpackages/OmicsON/example/nm-lipidomics-valid.txt"
 XData <- readWithoutDuplicates(pathToFileWithXData)
 YData <- readWithoutDuplicates(pathToFileWithYData)
 
