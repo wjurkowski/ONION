@@ -3,7 +3,7 @@ getChEBIOntologyChildren <- function(ChEBIId) {
     headerFields = c(Accept = "text/xml", Accept = "multipart/*", 'Content-Type' = "text/xml; charset=utf-8", SOAPAction = "")
     body = paste0('<soapenv:Envelope
                   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:cheb="http://www.ebi.ac.uk/webservices/chebi">
+                  xmlns:cheb="https://www.ebi.ac.uk/webservices/chebi">
                   <soapenv:Header/>
                   <soapenv:Body>
                   <cheb:getOntologyChildren>
@@ -27,7 +27,7 @@ getChEBIOntologyParents <- function(ChEBIId) {
     headerFields = c(Accept = "text/xml", Accept = "multipart/*", 'Content-Type' = "text/xml; charset=utf-8", SOAPAction = "")
     body = paste0('<soapenv:Envelope
                   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:cheb="http://www.ebi.ac.uk/webservices/chebi">
+                  xmlns:cheb="https://www.ebi.ac.uk/webservices/chebi">
                   <soapenv:Header/>
                   <soapenv:Body>
                     <cheb:getOntologyParents>

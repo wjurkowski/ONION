@@ -22,7 +22,6 @@ import(igraph)
 
 # Export NEW PUBLIC API
 export(clusterUsingOntology)
-export(firstExistsInReactomeChebiOntology)
 export(mergeChEBIOntologyWithChildFavoring)
 export(mapReactomePathwaysUnderOrganism)
 export(getStringNeighbours)
@@ -41,8 +40,9 @@ export(makePLSOnGroups)
 # DEV Exports.
 
 
-# OLD PUBLIC exports.
-
+# Expoet functions
+export(setUpReactomeMapping)
+export(decorateByReactomeData)
 
 # Export CONST
 export(taxonIdToReactomeCodes)

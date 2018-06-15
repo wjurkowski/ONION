@@ -99,12 +99,7 @@ getUniProtRefSeqs <- function() {
     uniProtRefSeqs <- stringResponseBodyToDataFrame(response[[1]], "\t", "reactomeId", "uniprotId")
 }
 
-#GlobalForPerformance
-.onLoad <- function(libname, pkgname) {
-    chEBIToReactomeLowestLevel <<- read.table(paste(find.package("OmicsON"), "resources/ChEBI2Reactome.txt", sep = "/"))
-    Ensembl2ReactomeLowestLevel <<- read.table(paste(find.package("OmicsON"), "resources/Ensembl2Reactome.txt", sep = "/"))
-    UniProt2ReactomeLowestLevel <<- read.table(paste(find.package("OmicsON"), "resources/UniProt2Reactome.txt", sep = "/"))
-}
+.onLoad <- function(libname, pkgname) {}
 
 #Additional (local) API methods
 checkIfPathwayIdExistsForChEBIId <- function(ChEBIId) {

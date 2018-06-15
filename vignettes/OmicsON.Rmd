@@ -18,13 +18,14 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, error = TR
 # Table of Contents
 i. [About OmicsON](#about-omicson)
 i. [OmicsON workflow](#omicson-workflow)
-  * 1. [Data input](#input-data)
-  * 2. [Cluster molecules with ChEBI Ontology](#chebi-ontology)
-  * 3. [Map molecules on Reactome](#use-reactome)
-  * 4. [Expand gene clusters with STRING DB](#use-string-db)
-  * 5. [Define group](#define-goups)
-  * 6. [Lalalala lala](#define-groups-of-genes-and-metabolites)
-  * 7. [Multivariate Statistical Analysis](#statistical-analysis)
+  * 1. [Set up mapping files](set-up-mapping-files)
+  * 2. [Data input](#input-data)
+  * 3. [Cluster molecules with ChEBI Ontology](#chebi-ontology)
+  * 4. [Map molecules on Reactome](#use-reactome)
+  * 5. [Expand gene clusters with STRING DB](#use-string-db)
+  * 6. [Define group](#define-goups)
+  * 7. [Lalalala lala](#define-groups-of-genes-and-metabolites)
+  * 8. [Multivariate Statistical Analysis](#statistical-analysis)
     * a. [CCA - Canonical Correlation Analysis](#cca---canonical-correlation-analysis)
     * b. [PLS - Partial Least Squares Regression](#pls---partial-least-squares-regression)
 ii. [Methods in deatils](#methods-in-deatils)
@@ -37,25 +38,22 @@ OmicsON provides knowedge driven data regularisation to facilitate multivariate 
 ## OmicsON Workflow
 Below you will find OmicsON workflow described step by step. By following these steps and using examplary data included in this package user should get the same results as shown in this vignette. 
 
+### Set up mapping files
+It is important to set up OmicsON. You have to download mapping files from 
+
 ### Data input
-To start work with OmicsON you need to provide two 'omics' data sets in data frame form. DF can be created from files as in \example directory under package insallation directory. This files are in tab delimited files with headers (colnames and rownames). Files are named `nm-transcriptomics.txt`, `nm-lipidomics.txt` and `nm-groups.txt`.
+To start work with OmicsON you need to provide two 'omics' data sets in data frame form. DF can be created from files as in \extdata directory under package insallation directory. This files are in tab delimited files with headers (colnames and rownames). Files are named `nm-transcriptomics.txt` and `nm-lipidomics.txt`.
 
 Below you can find first few lines of files presented in form of data frame. As you can see all of them have heades and colnames. To find them localization please run `find.package("OmicsON")` after package loading `library(OmicsON)`.
 
 
-```{r, results = 'asis'} 
-    pathToFileWithLipidomicsData <- paste(
-        find.package("OmicsON"),
-        "/example/nm-lipidomics.txt", 
-        sep = "")
+```{r, results = 'asis'}
+    pathToFileWithLipidomicsData <- system.file(package="OmicsON", "extdata", "nm-lipidomics.txt")
     lipidomicsInputData <- read.table(pathToFileWithLipidomicsData, header = TRUE)
     lipidomicsInputDf <- head(lipidomicsInputData, 6)
     knitr::kable(lipidomicsInputDf[1:7], caption = "Lipidomisc data")
     
-    pathToFileWithTranscriptomicsData <- paste(
-        find.package("OmicsON"),
-        "/example/nm-transcriptomics.txt", 
-        sep = "")
+    pathToFileWithTranscriptomicsData <- system.file(package="OmicsON", "extdata", "nm-transcriptomics.txt")
     transcriptomicsInputData <- read.table(pathToFileWithTranscriptomicsData, header = TRUE)
     transcriptomicsInputDf <- head(transcriptomicsInputData, 6)
     knitr::kable(transcriptomicsInputDf[1:7], caption = "Transcriptomics data")

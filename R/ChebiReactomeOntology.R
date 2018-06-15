@@ -49,7 +49,7 @@ firstExistsInReactomeChebiOntology <- function(baseData, rootColumnName) {
 # NEW PUBLIC API:
 mergeChEBIOntologyWithChildFavoring <- function(chebiOntologyDataFrame, rootColumnName = 'root') {
     mergeOntologyDataFrame <- ddply(chebiOntologyDataFrame, c(rootColumnName), function(dataFrameRow){
-        ontologyId <- 0
+        ontologyId <- ""
         whoWins <- 'N'
         if (1 == dataFrameRow$child && 1 == dataFrameRow$parent) {
             ontologyId <- dataFrameRow$root
@@ -61,7 +61,7 @@ mergeChEBIOntologyWithChildFavoring <- function(chebiOntologyDataFrame, rootColu
             ontologyId <- dataFrameRow$parent
             whoWins <- 'P'
         }
-        data.frame('ontologyId' = ontologyId, 'root' = dataFrameRow$root, 'whoWins' = whoWins)
+        data.frame('root' = dataFrameRow$root, 'ontologyId' = ontologyId, 'whoWins' = whoWins)
     })
     mergeOntologyDataFrame
 }

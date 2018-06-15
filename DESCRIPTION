@@ -44,3 +44,4 @@ Collate:
     'ChebiReactomeOntology.R'
     'SimilarityClustering.R'
     'MapReactome.R'
+    'NewPublicApi.R'

@@ -48,7 +48,7 @@ mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyI
                                            'genesSymbolsFromUniProt' = I(list(genesSymbolsFromUniProt)))
         chebiIdToEnsembleIds
     })
-    chebiIdsToEnsembleIds
+    chebiIdsToEnsembleIds[,c(2, 1, 3:7)]
 }
 
 
