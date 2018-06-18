@@ -20,12 +20,11 @@ i. [About OmicsON](#about-omicson)
 i. [OmicsON workflow](#omicson-workflow)
   * 1. [Set up mapping files](set-up-mapping-files)
   * 2. [Data input](#input-data)
-  * 3. [Cluster molecules with ChEBI Ontology](#chebi-ontology)
-  * 4. [Map molecules on Reactome](#use-reactome)
-  * 5. [Expand gene clusters with STRING DB](#use-string-db)
-  * 6. [Define group](#define-goups)
-  * 7. [Lalalala lala](#define-groups-of-genes-and-metabolites)
-  * 8. [Multivariate Statistical Analysis](#statistical-analysis)
+  * 3. [Decorate data by Reactome](#uecorate-data-by-reactome)
+  * 4. [Expand gene clusters with STRING DB](#use-string-db)
+  * 5. [Define group](#define-goups)
+  * 6. [Lalalala lala](#define-groups-of-genes-and-metabolites)
+  * 7. [Multivariate Statistical Analysis](#statistical-analysis)
     * a. [CCA - Canonical Correlation Analysis](#cca---canonical-correlation-analysis)
     * b. [PLS - Partial Least Squares Regression](#pls---partial-least-squares-regression)
 ii. [Methods in deatils](#methods-in-deatils)
@@ -38,14 +37,21 @@ OmicsON provides knowedge driven data regularisation to facilitate multivariate 
 ## OmicsON Workflow
 Below you will find OmicsON workflow described step by step. By following these steps and using examplary data included in this package user should get the same results as shown in this vignette. 
 
+
 ### Set up mapping files
-It is important to set up OmicsON. You have to download mapping files from 
+It is important to set up OmicsON mapping. You can set it up by invoking function presented below. ChEBI to Reactome, Ensembl to Reactome and UniProt to Reactome mappings are required.
+
+```{r, results = 'asis'}
+OmicsON::setUpReactomeMapping(ChEBI2ReactomeFileURL = "https://reactome.org/download/current/ChEBI2Reactome.txt",
+                              Ensembl2ReactomeFileURL = "https://reactome.org/download/current/Ensembl2Reactome.txt",
+                              UniProt2ReactomeFileURL = "https://reactome.org/download/current/UniProt2Reactome.txt")
+```
+
 
 ### Data input
-To start work with OmicsON you need to provide two 'omics' data sets in data frame form. DF can be created from files as in \extdata directory under package insallation directory. This files are in tab delimited files with headers (colnames and rownames). Files are named `nm-transcriptomics.txt` and `nm-lipidomics.txt`.
+After setting up mapping, to start work with OmicsON you need to provide two 'omics' data sets in data frame form. DF can be created from files as in \extdata directory under package insallation directory. This files are in tab delimited files with headers (colnames and rownames). Files are named `nm-transcriptomics.txt` and `nm-lipidomics.txt`.
 
-Below you can find first few lines of files presented in form of data frame. As you can see all of them have heades and colnames. To find them localization please run `find.package("OmicsON")` after package loading `library(OmicsON)`.
-
+Below you can find first few lines of files presented in form of data frame. As you can see all of them have heades and colnames. To find them localization please run `find.package("OmicsON")` after package loading `library(OmicsON)`. You can use below snippet of code to load mentioned files into R environment:
 
 ```{r, results = 'asis'}
     pathToFileWithLipidomicsData <- system.file(package="OmicsON", "extdata", "nm-lipidomics.txt")
@@ -60,67 +66,30 @@ Below you can find first few lines of files presented in form of data frame. As 
 ```
 
 
-### Cluster molecules with ChEBI Ontology
+### Decorate data by Reactome
 
 The first step is to load the input file. When this is done then we are ready to map ChEBI identifiers contained in the file to Reactome database by searching of ontologically related molecules present in Reactome's pathways. The output includes six rows of mapped ids.
 
 ```{r, echo=TRUE, results='asis'}
-    clusteredSmallMolecules <- OmicsON::clusterUsingOntology(
-        chebiIdsDataFrame = lipidomicsInputDf,
-        rootColumnName = "ChEBI",
-        ontologyRepresentatnion = OmicsON::firstExistsInReactomeChebiOntology)
+    decoratedByReactome <- OmicsON::decorateByReactomeData(chebiMoleculesDf = lipidomicsInputData[c(2, 3, 6),],
+                                chebiIdsColumnName = "ChEBI", organismTaxonomyId = '9606')
+    knitr::kable(decoratedByReactome)
 ```
 
-```{r, echo=FALSE, results='asis'}
-    knitr::kable(head(clusteredSmallMolecules, 6))
-```
 
-The result table represent mapping of all small molecules to respective parents and children of ChEBI ontology: "root" denotes source IDs; 1 - ID already exists in Reactome, if not but there is an alternative in the form of child or parent in ChEBI Ontology, OmicsON put its id under proper column. If we can not find root id and can not find any parent or children for it, OmicsON surround it by 0.
-
-Next step is merge of children, roots and parents. For now we have only one method available `OmicsON::mergeChEBIOntologyWithChildFavoring()`, but you can simply develop yourself. Our function merge table with children favoring.
-
-```{r, echo=TRUE, results='asis'}
-    mergedSmallMolecules <- OmicsON::mergeChEBIOntologyWithChildFavoring(
-        clusteredSmallMolecules, 
-        rootColumnName = 'root')
-```
-
-```{r, echo=FALSE, results='asis'}
-    knitr::kable(head(mergedSmallMolecules, 6))
-```
+The result table represent mapping of all small molecules to respective parents and children of ChEBI ontology: "root" denotes source IDs; if ID already exists in Reactome ontologyId column has the same value, if not but there is an alternative in the form of child or parent in ChEBI ontology, OmicsON put its id under ontologyId column. If we can not find root id and can not find any parent or children for it, OmicsON leave it empty.
 
 Results include ontologyId column which contains chebi ids used in following procedure, Root column show from which point we start ontology search. In whoWins you can find R, C, P, N letters which mean Root, Child, Parent, None.
 
-
-### Map molecules on Reactome
 Once the result table of merge operation is generated, you can use it to find genes which are in the same pathway as small molecules with specific ChEBI identifiers. Currently the only supported source of canonical pathways is Reactome database.  
 Additionally instead of using dataframe from merge result (mergedSmallMolecules) you can use any dataframe, but then you have to specify a name of the column included ontology IDs:
 
-```{r, echo=FALSE, results='asis'}
-    knitr::kable(data.frame(
-        mergedSmallMolecules[1:4, c("ontologyId"), drop = FALSE], 
-        XYZ = c("1","2","3","4"))
-    )
-```
-
 As a result you recive dataframe presented below:
 
-```{r, echo=TRUE, results='hide'}
-    chebiIdsToReactomePathways <- OmicsON::mapReactomePathwaysUnderOrganism(
-        chebiOntologyIds = mergedSmallMolecules[, c("ontologyId"), drop = FALSE], 
-        organismTaxonomyId = '9606', 
-        idsColumnName = "ontologyId", 
-        rootColumnName = NULL)
-    chebiIdsToReactomePathwaysWithRoot <- OmicsON::mapReactomePathwaysUnderOrganism(
-        chebiOntologyIds = mergedSmallMolecules[, c("ontologyId", "root"), drop = FALSE], 
-        organismTaxonomyId = '9606', 
-        idsColumnName = "ontologyId", 
-        rootColumnName = "root")
-```
 Result of `OmicsON::mapReactomePathwaysUnderOrganism` is DF, but this DF is complicated, which include lists as cells. This DF contains respectively:
 
-- ontologyId - ChEBI ids used in the calculation, it is taken from ChEBI ontology base on root,
 - root - ChEBIs ids given by user,
+- ontologyId - ChEBI ids used in the calculation, it is taken from ChEBI ontology base on root,
 - ensembleIds - List including vector of Ensemble's Ids,
 - uniProtIds - List including vector of UniProt's Ids,
 - ensembleIds - List including vector of Ensemble's Ids,
