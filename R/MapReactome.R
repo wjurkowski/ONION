@@ -123,7 +123,7 @@ mapFromStringIdsToEnsembleIds <- function(vactofOfStringIds) {
 getEnsemblProteinsIdsBaseOnEnsemblGensIdsUsingMyGenePackage <- function(gensIdsVector, organismTaxonomyId) {
 
     additionalInformationBaseOnEnsemblGenId <- invisible(
-        queryMany(qterms = gensIdsVector[[1]], scopes = c("ensembl.gene"),
+        mygene::queryMany(qterms = gensIdsVector[[1]], scopes = c("ensembl.gene"),
                   fields = c("symbol","ensembl.protein")))
     equivalentEnsemlProteinsIds <- unlist(additionalInformationBaseOnEnsemblGenId$ensembl)
 

@@ -38,7 +38,9 @@ export(makePermutationTestOnPLS)
 export(makePLSOnGroups)
 
 # DEV Exports.
-
+export(mapFromStringIdsToEnsembleIds)
+export(getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage)
+export(firstExistsInReactomeChebiOntology)
 
 # Expoet functions
 export(setUpReactomeMapping)

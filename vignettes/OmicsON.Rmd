@@ -20,8 +20,8 @@ i. [About OmicsON](#about-omicson)
 i. [OmicsON workflow](#omicson-workflow)
   * 1. [Set up mapping files](set-up-mapping-files)
   * 2. [Data input](#input-data)
-  * 3. [Decorate data by Reactome](#uecorate-data-by-reactome)
-  * 4. [Expand gene clusters with STRING DB](#use-string-db)
+  * 3. [Decorate data by Reactome data](#uecorate-data-by-reactome-data)
+  * 4. [Decorate data by STRING data](#decorate-data-by-string-data)
   * 5. [Define group](#define-goups)
   * 6. [Lalalala lala](#define-groups-of-genes-and-metabolites)
   * 7. [Multivariate Statistical Analysis](#statistical-analysis)
@@ -66,7 +66,7 @@ Below you can find first few lines of files presented in form of data frame. As 
 ```
 
 
-### Decorate data by Reactome
+### Decorate data by Reactome data
 
 The first step is to load the input file. When this is done then we are ready to map ChEBI identifiers contained in the file to Reactome database by searching of ontologically related molecules present in Reactome's pathways. The output includes six rows of mapped ids.
 
@@ -104,7 +104,7 @@ Result of `OmicsON::mapReactomePathwaysUnderOrganism` is DF, but this DF is comp
 ```
 
 
-### Use STRING DB
+### Decorate data by STRING data
 
 When you have results from Reactome step, then you are ready to use STRING DB step. In this part you search for any extra interactions of gens which you find in Reactome. STRING calls them neighbours. To do it just put results achived from Reactome to `OmicsON::getStringNeighbours()` method. This function produce dataframe. Below one row of this this dataframe is presented:
 
