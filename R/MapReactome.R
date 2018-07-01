@@ -169,15 +169,17 @@ getSymbolsBaseOnUniProtIdsUsingMyGenePackage <- function(gensIdsVector, organism
 
 # NEW API.
 getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage <- function(gensIdsVector, organismTaxonomyId) {
-    # genes <- getGenes(gensIdsVector, fields = "all")
-    additionalInformationBaseOnEnsemblPeptidId <- invisible(queryMany(
-        gensIdsVector, scopes = 'ensemblprotein'
-        , fields = c("symbol","ensembl.protein"), species = organismTaxonomyId
-    ))
-    equivalentEnsemlProteinsIdsVector <- unlist(
-        additionalInformationBaseOnEnsemblPeptidId$symbol[!is.na(additionalInformationBaseOnEnsemblPeptidId$symbol)]
-    )
-    equivalentEnsemlProteinsIdsVector <- as.character(equivalentEnsemlProteinsIdsVector)
+    equivalentEnsemlProteinsIdsVector <- character(0)
+    if (0 != length(gensIdsVector)){
+        additionalInformationBaseOnEnsemblPeptidId <- invisible(queryMany(
+            gensIdsVector, scopes = 'ensemblprotein'
+            , fields = c("symbol","ensembl.protein"), species = organismTaxonomyId
+        ))
+        equivalentEnsemlProteinsIdsVector <- unlist(
+            additionalInformationBaseOnEnsemblPeptidId$symbol[!is.na(additionalInformationBaseOnEnsemblPeptidId$symbol)]
+        )
+        equivalentEnsemlProteinsIdsVector <- as.character(equivalentEnsemlProteinsIdsVector)
+    }
     equivalentEnsemlProteinsIdsVector
 }
 

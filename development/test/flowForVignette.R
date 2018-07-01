@@ -23,7 +23,7 @@ decReac <- OmicsON::decorateByReactomeData(chebiMoleculesDf = lipidomicsInputDat
 knitr::kable(lipidomicsInputData[c(2, 3, 6),])
 knitr::kable(decReac[c(2, 12, 18),])
 
-
+decReac[1:10, "ensembleIds"]
 
 # Easy API
 # DONE : root column jako pierwsza.
@@ -47,66 +47,56 @@ listOfEnsembleIdColumnName = 'ensembleIds'
         version = stringDbVersion,
         species = stringOrganismId,
         input_directory = path.expand("~"))
-    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[!chebiIdsToReactomePathways[idsColumnName] == '', ]
-    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways[c(1,19),]
-    chebiIdsToRealReactomePathways <- chebiIdsToReactomePathways
-    dfElement <- chebiIdsToRealReactomePathways[1,]
-    dfElement <- chebiIdsToRealReactomePathways[19,]
-    dfWithString <- ddply(.data = chebiIdsToRealReactomePathways, columnsUseInIteration, .fun = function(dfElement) {
+    dfWithString <- ddply(.data = chebiIdsToReactomePathways, columnsUseInIteration, .fun = function(dfElement) {
+
+        # dfElement <- chebiIdsToReactomePathways[3,]
+        # dfElement[1,"ensembleIds"]
+
         extendedByStringAsVector <- character(length = 0)
-        stringGenesSymbols <- character(length = 0)
+        stringGenesSymbolsExpand <- character(length = 0)
+        stringGenesSymbolsNarrow <- character(length = 0)
         if (0 == length(dfElement[1, listOfEnsembleIdColumnName][[1]])) {
         } else {
-            # diff_exp_example2 <- data.frame("translate" = decReac[,"ensembleIds"][[1]])
-            # example2_mapped <- string_db$map( diff_exp_example2, "translate", removeUnmappedRows = TRUE )
-            # example2_mapped[,"STRING_id"]
-
             toTranslate <- data.frame("translate" = dfElement[1,listOfEnsembleIdColumnName][[1]])
             translated <- string_db$map( toTranslate, "translate", removeUnmappedRows = TRUE )
             stringId1 <- translated[,"STRING_id"]
-# cat("\014")
-            # proteinIds <- getEnsemblProteinsIdsBaseOnEnsemblGensIdsUsingMyGenePackage(
-            #     dfElement[1,listOfEnsembleIdColumnName], organismTaxonomyId = stringOrganismId
-            # )
-            # stringId1 <- string_db$mp(proteinIds)
-            #New Approach!!!
             stringGraph <- string_db$get_graph()
-
 
             extendedByString <- plyr::ddply(.data = translated, .variables = c("STRING_id"), .fun = function(r) {
                 data.frame("res" = I(list(igraph::neighbors(stringGraph, r[,"STRING_id"])$name)))
             })
 
             extendedByStringAsVector <- unique(unlist(extendedByString[,"res"]))
+            ensembleIdsFromStringDbExpand <- mapFromStringIdsToEnsembleIds(extendedByStringAsVector)
+            stringGenesSymbolsExpand <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDbExpand,
+                                                                                           organismTaxonomyId = stringOrganismId)
 
-            # interSect <- unique(ssssaaaa[,"res"][[1]])
-            # for(i in length(ssssaaaa[,"res"])) {
-            #     interSect <- intersect(interSect, ssssaaaa[,"res"][[i]])
-            # }
+            interSect <- character(length = 0)
+            if (1 >= length(extendedByString[,"res"])) {
+                interSect <- character(length = 0)
+            } else {
+                interSect <- unique(extendedByString[,"res"][[1]])
+                for(i in length(extendedByString[,"res"])) {
+                    interSect <- intersect(interSect, extendedByString[,"res"][[i]])
+                }
+            }
+            ensembleIdsFromStringDbNarrow <- mapFromStringIdsToEnsembleIds(interSect)
+            stringGenesSymbolsNarrow <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDbNarrow,
+                                                                                     organismTaxonomyId = stringOrganismId)
 
 
-            # returnNeighbourVector <- string_db$get_neighbors(stringId1)
-            ensembleIdsFromStringDb <- mapFromStringIdsToEnsembleIds(extendedByStringAsVector)
-            stringGenesSymbols <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDb, organismTaxonomyId = stringOrganismId)
+
+
         }
         dffff <- data.frame('ensembleIds' = dfElement[1,listOfEnsembleIdColumnName][1],
                             'stringIds' = I(list(unique(extendedByStringAsVector))),
-                            'stringGenesSymbols' = I(list(unique(stringGenesSymbols))) )
+                            'stringGenesSymbolsExpand' = I(list(unique(stringGenesSymbolsExpand))),
+                            'stringGenesSymbolsNarrow' = I(list(unique(stringGenesSymbolsNarrow))))
         dffff
     })
-    dfWithString
-}
 
-
-
-
-
-
-
-
-
-
-
+    dfWithString[,"stringGenesSymbolsNarrow"]
+    print("as")
 
 
 
