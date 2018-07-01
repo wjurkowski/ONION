@@ -15,8 +15,6 @@ transcriptomicsInputData <- read.table(pathToFileWithTranscriptomicsData, header
 transcriptomicsInputDf <- head(transcriptomicsInputData, 6)
 knitr::kable(transcriptomicsInputDf[1:7], caption = "Transcriptomics data")
 
-library(ONION)
-
 decReac <- OmicsON::decorateByReactomeData(chebiMoleculesDf = lipidomicsInputData,
                                 chebiIdsColumnName = "ChEBI", organismTaxonomyId = '9606')
 
@@ -29,80 +27,31 @@ decReac[1:10, "ensembleIds"]
 # DONE : root column jako pierwsza.
 # DONE : ontoloogyId - dac te same id co w root ale puste mapowania.
 # FIXED : BUG : Chebi id function - sprawdzić czy działa.
-library(STRINGdb)
 
-chebiIdsToReactomePathways <- decReac
-stringOrganismId = as.numeric('9606')
-stringDbVersion = "10"
-idsColumnName = 'ontologyId'
-rootColumnName = 'root'
-listOfEnsembleIdColumnName = 'ensembleIds'
-    if (is.null(rootColumnName)) {
-        columnsUseInIteration <- c(idsColumnName)
-    } else {
-        columnsUseInIteration <- c(rootColumnName, idsColumnName)
-    }
+decSrtDb <- OmicsON::decorateByStringDbData(chebiIdsToReactomePathways = decReac, listOfEnsembleIdColumnName = 'ensembleIds')
 
-    string_db <- STRINGdb$new(
-        version = stringDbVersion,
-        species = stringOrganismId,
-        input_directory = path.expand("~"))
-    dfWithString <- ddply(.data = chebiIdsToReactomePathways, columnsUseInIteration, .fun = function(dfElement) {
-
-        # dfElement <- chebiIdsToReactomePathways[3,]
-        # dfElement[1,"ensembleIds"]
-
-        extendedByStringAsVector <- character(length = 0)
-        stringGenesSymbolsExpand <- character(length = 0)
-        stringGenesSymbolsNarrow <- character(length = 0)
-        if (0 == length(dfElement[1, listOfEnsembleIdColumnName][[1]])) {
-        } else {
-            toTranslate <- data.frame("translate" = dfElement[1,listOfEnsembleIdColumnName][[1]])
-            translated <- string_db$map( toTranslate, "translate", removeUnmappedRows = TRUE )
-            stringId1 <- translated[,"STRING_id"]
-            stringGraph <- string_db$get_graph()
-
-            extendedByString <- plyr::ddply(.data = translated, .variables = c("STRING_id"), .fun = function(r) {
-                data.frame("res" = I(list(igraph::neighbors(stringGraph, r[,"STRING_id"])$name)))
-            })
-
-            extendedByStringAsVector <- unique(unlist(extendedByString[,"res"]))
-            ensembleIdsFromStringDbExpand <- mapFromStringIdsToEnsembleIds(extendedByStringAsVector)
-            stringGenesSymbolsExpand <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDbExpand,
-                                                                                           organismTaxonomyId = stringOrganismId)
-
-            interSect <- character(length = 0)
-            if (1 >= length(extendedByString[,"res"])) {
-                interSect <- character(length = 0)
-            } else {
-                interSect <- unique(extendedByString[,"res"][[1]])
-                for(i in length(extendedByString[,"res"])) {
-                    interSect <- intersect(interSect, extendedByString[,"res"][[i]])
-                }
-            }
-            ensembleIdsFromStringDbNarrow <- mapFromStringIdsToEnsembleIds(interSect)
-            stringGenesSymbolsNarrow <- getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage(ensembleIdsFromStringDbNarrow,
-                                                                                     organismTaxonomyId = stringOrganismId)
+decSrtDbUniProt <- OmicsON::decorateByStringDbData(chebiIdsToReactomePathways = decReac, listOfEnsembleIdColumnName = 'uniProtIds')
 
 
+decSrtDbUniProtNameTest <- OmicsON::decorateByStringDbData(chebiIdsToReactomePathways = decReac[1,], listOfEnsembleIdColumnName = 'uniProtIds')
 
+listOfEnsembleIdColumnName <- 'daaaa'
+names(decSrtDbUniProtNameTest)['listOfEnsembleIdColumnName'] <- listOfEnsembleIdColumnName
 
-        }
-        dffff <- data.frame('ensembleIds' = dfElement[1,listOfEnsembleIdColumnName][1],
-                            'stringIds' = I(list(unique(extendedByStringAsVector))),
-                            'stringGenesSymbolsExpand' = I(list(unique(stringGenesSymbolsExpand))),
-                            'stringGenesSymbolsNarrow' = I(list(unique(stringGenesSymbolsNarrow))))
-        dffff
-    })
+decSrtDb[1, "stringGenesSymbolsNarrow"]
+decSrtDbUniProt[1, "stringGenesSymbolsNarrow"]
 
     dfWithString[,"stringGenesSymbolsNarrow"]
     print("as")
+    decReac[length()>100,"ensembleIds"]
+
+    for(i in 1:length(decReac[, "ensembleIds"])) {
+        print(length(decReac[, "ensembleIds"][[i]]))
+        print("as")
+    }
 
 
-
-
-
-
+decReac[3,"ensembleIds"]
 
 
 

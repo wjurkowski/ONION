@@ -45,6 +45,7 @@ export(firstExistsInReactomeChebiOntology)
 # Expoet functions
 export(setUpReactomeMapping)
 export(decorateByReactomeData)
+export(decorateByStringDbData)
 
 # Export CONST
 export(taxonIdToReactomeCodes)
