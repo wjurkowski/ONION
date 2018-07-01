@@ -512,7 +512,7 @@ makePLSCharts <- function(PLS) {
 
 # NEW PUBLIC API
 createFunctionalInteractionsDataFrame <- function(chebiToReactomeDataFrame, singleIdColumnName = 'ontologyId', idsListColumnName = 'ensembleIds') {
-    functionalInteractionsDataFrame <- ddply(.data = chebiIdsToReactomePathways, c(singleIdColumnName), .fun = function(dfElement) {
+    functionalInteractionsDataFrame <- ddply(.data = chebiToReactomeDataFrame, c(singleIdColumnName), .fun = function(dfElement) {
         functionalInteractionsRows <- adply(.data = dfElement[1,c(idsListColumnName)][[1]], .margins = 1, dfff = dfff, .fun = function(listElement, dfff) {
             functionalInteractionsRow <- data.frame("Gene1" = dfElement[1, c(singleIdColumnName)],
                                "Gene2" = listElement,

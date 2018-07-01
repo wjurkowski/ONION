@@ -42,16 +42,17 @@ Below you will find OmicsON workflow described step by step. By following these 
 It is important to set up OmicsON mapping. You can set it up by invoking function presented below. ChEBI to Reactome, Ensembl to Reactome and UniProt to Reactome mappings are required.
 
 ```{r, results = 'asis'}
-OmicsON::setUpReactomeMapping(ChEBI2ReactomeFileURL = "https://reactome.org/download/current/ChEBI2Reactome.txt",
-                              Ensembl2ReactomeFileURL = "https://reactome.org/download/current/Ensembl2Reactome.txt",
-                              UniProt2ReactomeFileURL = "https://reactome.org/download/current/UniProt2Reactome.txt")
+    OmicsON::setUpReactomeMapping(ChEBI2ReactomeFileURL = "https://reactome.org/download/current/ChEBI2Reactome.txt", 
+                                  Ensembl2ReactomeFileURL = "https://reactome.org/download/current/Ensembl2Reactome.txt", 
+                                  UniProt2ReactomeFileURL = "https://reactome.org/download/current/UniProt2Reactome.txt")
 ```
 
 
 ### Data input
-After setting up mapping, to start work with OmicsON you need to provide two 'omics' data sets in data frame form. DF can be created from files as in \extdata directory under package insallation directory. This files are in tab delimited files with headers (colnames and rownames). Files are named `nm-transcriptomics.txt` and `nm-lipidomics.txt`.
+After setting up mapping, to start work with OmicsON you need to provide two 'omics' data sets in data frame form. Data frame can be created from files as in \extdata directory under package insallation directory. This files are in tab delimited files with headers (colnames and rownames). Files are named `nm-transcriptomics.txt` and `nm-lipidomics.txt`.
 
-Below you can find first few lines of files presented in form of data frame. As you can see all of them have heades and colnames. To find them localization please run `find.package("OmicsON")` after package loading `library(OmicsON)`. You can use below snippet of code to load mentioned files into R environment:
+Below you can find first few lines of files presented in form of data frame. As you can see all of them have heades and colnames. To find them localization please run `find.package("OmicsON")` after package loading `library(OmicsON)`.
+You can use below snippet of code to load mentioned files into R environment:
 
 ```{r, results = 'asis'}
     pathToFileWithLipidomicsData <- system.file(package="OmicsON", "extdata", "nm-lipidomics.txt")
@@ -68,117 +69,69 @@ Below you can find first few lines of files presented in form of data frame. As 
 
 ### Decorate data by Reactome data
 
-The first step is to load the input file. When this is done then we are ready to map ChEBI identifiers contained in the file to Reactome database by searching of ontologically related molecules present in Reactome's pathways. The output includes six rows of mapped ids.
+As soon as you set up OmincsON and input data are loaded, you are ready to decorate data by data presented in Reactome database. It is done by searching of ontologically related molecules present in Reactome's pathways. For further processes in that vignette we are using only few rows from input data. Rows are chosen to present possible border cases in a short time. CHEBI:28875 has representation in Reactome pathways. CHEBI:73705 does not have, but we can find  representatn of that group by ontology in ChEBI database - CHEBI:46761. CHEBI:35465 is not interesting case, no representation and no representants in ChEBI, so mapping and decoration is empty for that id.
 
 ```{r, echo=TRUE, results='asis'}
-    decoratedByReactome <- OmicsON::decorateByReactomeData(chebiMoleculesDf = lipidomicsInputData[c(2, 3, 6),],
+    dataToVignetteEvaluation <- lipidomicsInputData[lipidomicsInputData[,"ChEBI"] %in% c("CHEBI:28875","CHEBI:73705", "CHEBI:35465"),]
+    decoratedByReactome <- OmicsON::decorateByReactomeData(chebiMoleculesDf = dataToVignetteEvaluation,
                                 chebiIdsColumnName = "ChEBI", organismTaxonomyId = '9606')
     knitr::kable(decoratedByReactome)
 ```
 
 
-The result table represent mapping of all small molecules to respective parents and children of ChEBI ontology: "root" denotes source IDs; if ID already exists in Reactome ontologyId column has the same value, if not but there is an alternative in the form of child or parent in ChEBI ontology, OmicsON put its id under ontologyId column. If we can not find root id and can not find any parent or children for it, OmicsON leave it empty.
+What algorithm is behind the ontologies mapping? The first two columns of result table represent mapping of all small molecules to respective parents and children of ChEBI ontology: "root" denotes source IDs; if ID already exists in Reactome ontologyId column has the same value, if not but there is an alternative in the form of child or parent in ChEBI ontology, OmicsON put its id under "ontologyId" column. If we can not find root id and can not find any parent or children for it, OmicsON leave it empty.
 
-Results include ontologyId column which contains chebi ids used in following procedure, Root column show from which point we start ontology search. In whoWins you can find R, C, P, N letters which mean Root, Child, Parent, None.
-
-Once the result table of merge operation is generated, you can use it to find genes which are in the same pathway as small molecules with specific ChEBI identifiers. Currently the only supported source of canonical pathways is Reactome database.  
-Additionally instead of using dataframe from merge result (mergedSmallMolecules) you can use any dataframe, but then you have to specify a name of the column included ontology IDs:
-
-As a result you recive dataframe presented below:
-
-Result of `OmicsON::mapReactomePathwaysUnderOrganism` is DF, but this DF is complicated, which include lists as cells. This DF contains respectively:
+Full result's data frame contains respectively:
 
 - root - ChEBIs ids given by user,
 - ontologyId - ChEBI ids used in the calculation, it is taken from ChEBI ontology base on root,
 - ensembleIds - List including vector of Ensemble's Ids,
 - uniProtIds - List including vector of UniProt's Ids,
-- ensembleIds - List including vector of Ensemble's Ids,
 - reactomeIds - List including vector of pathway's ids from Reactome DB,
 - genesSymbolsFromEnsemble - List including vector of gen's symbols from Reactome DB base on pathway and Ensemble's Ids,
 - genesSymbolsFromUniProt - List including vector of gen's symbols from Reactome DB base on pathway and UniProt's Ids,
 
-```{r, echo=FALSE, results='asis'}
-    oneRowDf <- chebiIdsToReactomePathways[6,]
-    rownames(oneRowDf) <- NULL
-    knitr::kable(oneRowDf)
-```
-
 
 ### Decorate data by STRING data
 
-When you have results from Reactome step, then you are ready to use STRING DB step. In this part you search for any extra interactions of gens which you find in Reactome. STRING calls them neighbours. To do it just put results achived from Reactome to `OmicsON::getStringNeighbours()` method. This function produce dataframe. Below one row of this this dataframe is presented:
-
-```{r, echo=TRUE, results='hide'}
-chebiIdsToReactomePathwaysAndToStringNeighbours <- OmicsON::getStringNeighbours(
-    chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:15756",],
-    stringOrganismId = 9606,
-    stringDbVersion = "10",
-    idsColumnName = 'ontologyId',
-    rootColumnName = NULL,
-    listOfEnsembleIdColumnName = 'ensembleIds')
-```
-
-DF returned from this method is also a complicated one. It includes the same columns as previous and two extra columns. All of theme are from STRING database and has some edges (connections) with gens from ensembleIds column:
-
-- stringIds -
-- stringGensSymbols - 
-
-
-```{r, echo=FALSE, results='asis'}
-    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringIds[[1]] <- chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringIds[[1]][1:50]
-    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringGenesSymbols[[1]] <-
-    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringGenesSymbols[[1]][1:45]
-    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$ensembleIds[[1]] <-
-    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$ensembleIds[[1]][1:11]
-    knitr::kable(
-        chebiIdsToReactomePathwaysAndToStringNeighbours[
-            chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]
-    )
-```
-
-
-### Define groups of genes and metabolites
-This step joins files with data to analyse with results of Reactome step and/or results of STRING step. 
-
-
-### Define goups
-Groups are defined in data frame. OmicsON has method to create DF from GMT file, so you can use `readGroupsAsDf()` to do it. Example file of grouping is under example directory. 
+When you have results from Reactome step, then you are ready to use decoration by STRING DB. In this part you search for any extra interactions of gens which you find in Reactome. STRING calls them neighbours. To do it just put results achived from Reactome's decoration step to `OmicsON::decorateByStringDbData` method and set `listOfEnsembleIdColumnName` attribute to proper value - `ensembleIds` or `uniProtIds`. This function produce data frame. Below we have presented two data frames respectively for `ensembleIds` and `uniProtIds`:
 
 ```{r, echo=TRUE, results='asis'}
-    gmtGroupsFilePath <- paste(find.package("OmicsON"),"/example/nm-groups.txt", sep = "")
-    groups <- OmicsON::readGroupsAsDf(pathToFileWithGroupDefinition = gmtGroupsFilePath)
+    decoratedByStringBaseOnEnsembleIds <- OmicsON::decorateByStringDbData(chebiIdsToReactomePathways = decoratedByReactome, 
+                                                               listOfEnsembleIdColumnName = 'ensembleIds')
+    decoratedByStringBaseOnUniProtIds <- OmicsON::decorateByStringDbData(chebiIdsToReactomePathways = decoratedByReactome, 
+                                                                         listOfEnsembleIdColumnName = 'uniProtIds')
 ```
 
+Data frame returned from this method introduces three new columns. Them are, respectively:
+
+- stringIds - List including vector of all STRING's ids used in computations. 
+- stringGenesSymbolsExpand - List including vector of all neighbours find in STRING database.
+- stringGenesSymbolsNarrow - List including vector of intersection of all neighbours per id from set of ids used in search.
+
+
+How to traverse through data in presented data frames? I will present it on example. Moste importan is to understand that many cells include list of vectors! Example will show also what mapping to Ensemble can give different results than mapping to UniProt:
 ```{r, echo=FALSE, results='asis'}
-    knitr::kable(groups)
+    decoratedByStringBaseOnEnsembleIds[1, "root"]
+    decoratedByStringBaseOnEnsembleIds[1, "ensembleIds"][[1]]
+    decoratedByStringBaseOnEnsembleIds[1, "stringGenesSymbolsNarrow"][[1]]
+    decoratedByStringBaseOnUniProtIds[1, "root"]
+    decoratedByStringBaseOnUniProtIds[1, "uniProtIds"][[1]]
+    decoratedByStringBaseOnUniProtIds[1, "stringGenesSymbolsNarrow"][[1]]
 ```
 
-
-####User selected genes and metabolites
-Optionally, the analysis could be executed by hand picked selections of genes and metabolites
-
-```{r, echo=TRUE, results='asis'}
-#select small molecules
-lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:27432",]$root
-lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:73705",]$root
-joinLip <- c(as.character(lip1), as.character(lip2))
-
-#use Reactome genes mapped to selected small molecules
-reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:15756",]$genesSymbolsFromEnsemble[[1]]
-reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:16015",]$genesSymbolsFromEnsemble[[1]]
-joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]
-```
 
 ### Functional Ineractions DF
 You can create a functional interactions data frame by using this method:
 
 ```{r, echo=TRUE, results='asis'}
-    functionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
+    functionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(decoratedByReactome)
 ```
 
 ```{r, echo=FALSE, results='asis'}
     knitr::kable(head(functionalInteractions, 6))
 ```
+
 
 ### Statistical Analysis
 
@@ -186,6 +139,7 @@ OmicsON provides two statistical methods to analyse those data:
 
 - CCA - Canonical Correlation Analysis
 - PLS - Partial Least Squares Regression
+
 
 #### CCA - Canonical Correlation Analysis
 
