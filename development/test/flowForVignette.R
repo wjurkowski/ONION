@@ -35,88 +35,54 @@ decSrtDbUniProt <- OmicsON::decorateByStringDbData(chebiIdsToReactomePathways = 
 decSrtDbUniProtNameTest <- OmicsON::decorateByStringDbData(chebiIdsToReactomePathways = decReac[1,], listOfEnsembleIdColumnName = 'uniProtIds')
 
 
-
-chebiIdsToReactomePathwaysAndToStringNeighbours <- OmicsON::getStringNeighbours(
-    chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:15756",],
-    stringOrganismId = 9606,
-    stringDbVersion = "10",
-    idsColumnName = 'ontologyId',
-    rootColumnName = NULL,
-    listOfEnsembleIdColumnName = 'ensembleIds')
-
-chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringIds[[1]] <-
-    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringIds[[1]][1:50]
-chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringGenesSymbols[[1]] <-
-    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$stringGenesSymbols[[1]][1:45]
-chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$ensembleIds[[1]] <-
-    chebiIdsToReactomePathwaysAndToStringNeighbours[chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]$ensembleIds[[1]][1:11]
-knitr::kable(
-    chebiIdsToReactomePathwaysAndToStringNeighbours[
-        chebiIdsToReactomePathwaysAndToStringNeighbours$ontologyId == "CHEBI:15756",]
-)
-
-
-#select small molecules
-decReac[c(12),]
-lip1 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:15756",]$root
-lip2 <- mergedSmallMolecules[mergedSmallMolecules$root == "CHEBI:73705",]$root
-joinLip <- c(as.character(lip1), as.character(lip2))
-
-lipidomics <- c("CHEBI:73705", "CHEBI:15756")
-#use Reactome genes mapped to selected small molecules
-reactomeTrans1 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:15756",]$genesSymbolsFromEnsemble[[1]]
-reactomeTrans2 <- chebiIdsToReactomePathways[chebiIdsToReactomePathways$ontologyId == "CHEBI:28875",]$genesSymbolsFromEnsemble[[1]]
-joinRecatomeTrans <- c(reactomeTrans1, reactomeTrans2)[!duplicated(c(reactomeTrans1, reactomeTrans2))]
-
-#functionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(chebiIdsToReactomePathways)
-functionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(dataDecoratedByReactome)
-
 pathToExampleFileWithXData <- paste(find.package("OmicsON"),"/example/nm-transcriptomics.txt", sep = "")
 pathToExampleFileWithYData <- paste(find.package("OmicsON"),"/example/nm-lipidomics.txt", sep = "")
 
+XDF <- read.table(pathToExampleFileWithXData, header = TRUE);
+YDF <- read.table(pathToExampleFileWithYData, header = TRUE);
 
-#NEW API
-decReac
+transcriptomicsInputData
+lipidomicsInputData
 
-transcriptomics <- decReac[decReac$root == "CHEBI:15756",]$genesSymbolsFromEnsemble[[1]]
-transcriptomics <- decReac[decReac$root == "CHEBI:72850",]$genesSymbolsFromEnsemble[[1]]
-transcriptomics <- decReac[decReac$root == "CHEBI:28875",]$genesSymbolsFromEnsemble[[1]]
-lipidomics <- c("CHEBI:72850", "CHEBI:15756", "CHEBI:28875")
+typedTransData <- decSrtDb[decSrtDb[,"root"] %in% c("CHEBI:28875"),"stringGenesSymbolsExpand"]
+typedTransData <- decSrtDb[decSrtDb[,"root"] %in% c("CHEBI:73705"),"stringGenesSymbolsExpand"]
 
-XDataFrame <- transcriptomicsInputData
-YDataFrame <- lipidomicsInputData
+typedTransData <- decSrtDb[decSrtDb[,"root"] %in% c("CHEBI:28875"),"stringGenesSymbolsNarrow"]
+typedTransData <- decSrtDb[decSrtDb[,"root"] %in% c("CHEBI:73705"),"stringGenesSymbolsNarrow"]
 
-XData <- data.frame(XDataFrame[!duplicated(XDataFrame[1]), ], row.names = 1)
-YData <- data.frame(YDataFrame[!duplicated(YDataFrame[1]), ], row.names = 1)
 
-transposedXData <- as.data.frame(t(XData))
-transposedYData <- as.data.frame(t(YData))
+trandData <- transcriptomicsInputData$symbol
+intersect(typedTransData[[1]], as.character(trandData))
+str(typedTransData)
+str(trandData)
 
-xNamesVector <- transcriptomics
-yNamesVector <- lipidomics
-interX <- intersect(colnames(transposedXData), xNamesVector)
-interY <- intersect(colnames(transposedYData), yNamesVector)
+plyr::ddply(.data = decSrtDb, .variables = c("root"), .fun = function(dfRow) {
+    data.frame("common" = I(list(intersect(dfRow[,"stringGenesSymbolsExpand"][[1]], as.character(trandData)))))
+})
 
-X <- transposedXData[as.character(interX)]
-Y <- transposedYData[as.character(interY)]
-
-#BUG : nrow() not length!!!
-length(X)
-length(Y)
-ccaResults1 <- yacca::cca(X, Y)
-ccaResults1 <- OmicsON::makeCanonicalCorrelationAnalysis(
-    xNamesVector = transcriptomics,
-    yNamesVector = lipidomics,
+ccaResultsExpand <- OmicsON::makeCanonicalCorrelationAnalysis(
+    xNamesVector = decSrtDb[decSrtDb[,"root"] %in% c("CHEBI:73705"),"stringGenesSymbolsExpand"][[1]],
+    yNamesVector = c("CHEBI:73705"),
     XDataFrame = transcriptomicsInputData,
     YDataFrame = lipidomicsInputData)
 
-OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
+ccaResultsNarrow <- OmicsON::makeCanonicalCorrelationAnalysis(
+    xNamesVector = decSrtDb[decSrtDb[,"root"] %in% c("CHEBI:73705"),"stringGenesSymbolsNarrow"][[1]],
+    yNamesVector = c("CHEBI:73705"),
+    XDataFrame = transcriptomicsInputData,
+    YDataFrame = lipidomicsInputData)
 
-mccReactome <- OmicsON::makeCCAOnGroups(
-    groupsDefinitionDF = groups,
-    mappingDF = chebiIdsToReactomePathwaysWithRoot,
-    groupsDataDF = YDF,
-    mappingDataDF = XDF)
+
+
+OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResultsExpand)
+OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResultsNarrow)
+
+
+
+
+
+
+
 
 OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome$ccaResults[[1]])
 

@@ -22,8 +22,6 @@ i. [OmicsON workflow](#omicson-workflow)
   * 2. [Data input](#input-data)
   * 3. [Decorate data by Reactome data](#uecorate-data-by-reactome-data)
   * 4. [Decorate data by STRING data](#decorate-data-by-string-data)
-  * 5. [Define group](#define-goups)
-  * 6. [Lalalala lala](#define-groups-of-genes-and-metabolites)
   * 7. [Multivariate Statistical Analysis](#statistical-analysis)
     * a. [CCA - Canonical Correlation Analysis](#cca---canonical-correlation-analysis)
     * b. [PLS - Partial Least Squares Regression](#pls---partial-least-squares-regression)
@@ -164,17 +162,6 @@ Calculate CCA by hand:
 ```{r, fig.show='hold', fig.width=6, fig.height=6}
     OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
 ```
-
-Calculate CCA on groups:
-
-```{r, echo=TRUE, results='hide'}
-    mccReactome <- OmicsON::makeCCAOnGroups(
-        groupsDefinitionDF = groups, 
-        mappingDF = chebiIdsToReactomePathwaysWithRoot, 
-        groupsDataDF = YDF, 
-        mappingDataDF = XDF)
-
-``` 
 
 Inside the makeCCAOnGroups functions the permutatuin test is automaticly done. To do it yourself on your data do:
 
