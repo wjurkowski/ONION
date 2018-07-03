@@ -366,10 +366,13 @@ makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
 
     PLSResults <- tryCatch(
         {
-            PLSResultsFromMatrixInDF <- plsr(Y ~ X, data = combinedToTraining)
+            PLSResultsFromMatrixInDF <- pls::plsr(Y ~ X, data = combinedToTraining)
 
+            if (ncompValue > PLSResultsFromMatrixInDF$ncomp) {
+                ncompValue <- PLSResultsFromMatrixInDF$ncomp
+            }
             PlsPredict <- predict(PLSResultsFromMatrixInDF, ncomp = ncompValue, newdata = combinedToTest)
-            PlsTestRmsep <- RMSEP(PLSResultsFromMatrixInDF, newdata = combinedToTest)
+            PlsTestRmsep <- pls::RMSEP(PLSResultsFromMatrixInDF, newdata = combinedToTest)
             varianceExplained <- pls::explvar(PLSResultsFromMatrixInDF)
 
             #TODO: TRAINING and TEST is required!
@@ -490,8 +493,13 @@ plotRmsepForPLS <- function(PLSResult) {
 
 
 # NEW PUBLIC API
-plotRegression <- function(PLSResult, ncompValue) {
-    plot(PLSResult, ncomp = ncompValue, asp = 1, line = TRUE)
+plotRegression <- function(PLSResult, ncompValue = NULL) {
+    if (is.null(ncompValue)) {
+        plot(PLSResult, asp = 1, line = TRUE)
+    } else {
+        plot(PLSResult, ncomp = ncompValue, asp = 1, line = TRUE)
+    }
+
 }
 
 # TODO: Analiza różnicowa, differencial analysis.
