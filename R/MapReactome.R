@@ -488,18 +488,20 @@ makePLSOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName
 
 # NEW PUBLIC API
 plotRmsepForPLS <- function(PLSResult) {
-    plot(pls::RMSEP(PLSResult), legendpos = "topright")
+    plot(pls::RMSEP(PLSResult$training), legendpos = "topright")
 }
 
 
 # NEW PUBLIC API
 plotRegression <- function(PLSResult, ncompValue = NULL) {
     if (is.null(ncompValue)) {
-        plot(PLSResult, asp = 1, line = TRUE)
+        plot(PLSResult$training, asp = 1, line = TRUE)
     } else {
-        plot(PLSResult, ncomp = ncompValue, asp = 1, line = TRUE)
+        if (ncompValue > PLSResult$training$ncomp) {
+            ncompValue <- PLSResult$training$ncomp
+        }
+        plot(PLSResult$training, ncomp = ncompValue, asp = 1, line = TRUE)
     }
-
 }
 
 # TODO: Analiza różnicowa, differencial analysis.

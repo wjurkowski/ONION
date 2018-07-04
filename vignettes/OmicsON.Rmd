@@ -93,10 +93,10 @@ Full result's data frame contains respectively:
 When you have results from Reactome step, then you are ready to use decoration by STRING DB. In this part you search for any extra interactions of gens which you find in Reactome. STRING calls them neighbours. To do it just put results achived from Reactome's decoration step to `OmicsON::decorateByStringDbData` method and set `listOfEnsembleIdColumnName` attribute to proper value - `ensembleIds` or `uniProtIds`. This function produce data frame. Below we have presented two data frames respectively for `ensembleIds` and `uniProtIds`:
 
 ```{r, echo=TRUE, results='asis'}
-    decoratedByStringBaseOnEnsembleIds <- OmicsON::decorateByStringDbData(chebiIdsToReactomePathways = decoratedByReactome, 
-                                                               listOfEnsembleIdColumnName = 'ensembleIds')
-    decoratedByStringBaseOnUniProtIds <- OmicsON::decorateByStringDbData(chebiIdsToReactomePathways = decoratedByReactome, 
-                                                                         listOfEnsembleIdColumnName = 'uniProtIds')
+    decoratedByStringBaseOnEnsembleIds <- OmicsON::decorateByStringDbData(
+        chebiIdsToReactomePathways = decoratedByReactome, listOfEnsembleIdColumnName = 'ensembleIds')
+    decoratedByStringBaseOnUniProtIds <- OmicsON::decorateByStringDbData(
+        chebiIdsToReactomePathways = decoratedByReactome, listOfEnsembleIdColumnName = 'uniProtIds')
 ```
 
 Data frame returned from this method introduces three new columns. Them are, respectively:
@@ -105,6 +105,10 @@ Data frame returned from this method introduces three new columns. Them are, res
 - stringGenesSymbolsExpand - List including vector of all neighbours find in STRING database.
 - stringGenesSymbolsNarrow - List including vector of intersection of all neighbours per id from set of ids used in search.
 
+Full data frame resulted from decoration by String DB.
+```{r, echo=FALSE, results='asis'}
+    knitr::kable(decoratedByStringBaseOnEnsembleIds)
+```
 
 How to traverse through data in presented data frames? I will present it on example. Moste importan is to understand that many cells include list of vectors! Example will show also what mapping to Ensemble can give different results than mapping to UniProt:
 ```{r, echo=FALSE, results='asis'}
@@ -139,92 +143,53 @@ OmicsON provides two statistical methods to analyse those data:
 
 #### CCA - Canonical Correlation Analysis
 
-Calculate CCA by hand:
-
+Calculate CCA on data decorated by String DB:
 
 ```{r, echo=TRUE, results='asis'}
-    pathToExampleFileWithXData <- paste(find.package("OmicsON"),"/example/nm-transcriptomics.txt", sep = "")
-    pathToExampleFileWithYData <- paste(find.package("OmicsON"),"/example/nm-lipidomics.txt", sep = "")
+    ccaResultsExpand <- OmicsON::makeCanonicalCorrelationAnalysis(
+        xNamesVector = decoratedByStringBaseOnEnsembleIds[decoratedByStringBaseOnEnsembleIds[,"root"] %in% c("CHEBI:73705"),"stringGenesSymbolsExpand"][[1]],
+        yNamesVector = c("CHEBI:73705"),
+        XDataFrame = transcriptomicsInputData,
+        YDataFrame = lipidomicsInputData)
 
-    XDF <- read.table(pathToExampleFileWithXData, header = TRUE);
-    YDF <- read.table(pathToExampleFileWithYData, header = TRUE);
-
-    ccaResults1 <- OmicsON::makeCanonicalCorrelationAnalysis(
-        xNamesVector = joinRecatomeTrans,
-        yNamesVector = joinLip,
-            XDataFrame = XDF,
-            YDataFrame = YDF)
+    ccaResultsNarrow <- OmicsON::makeCanonicalCorrelationAnalysis(
+        xNamesVector = decoratedByStringBaseOnEnsembleIds[decoratedByStringBaseOnEnsembleIds[,"root"] %in% c("CHEBI:73705"),"stringGenesSymbolsNarrow"][[1]],
+        yNamesVector = c("CHEBI:73705"),
+        XDataFrame = transcriptomicsInputData,
+        YDataFrame = lipidomicsInputData)
 ```
 
+Ploting CCA results:
 
 ```{r, fig.show='hold', fig.width=6, fig.height=6}
-    OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults1)
+    OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResultsExpand)
+    OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResultsNarrow)
 ```
 
-Inside the makeCCAOnGroups functions the permutatuin test is automaticly done. To do it yourself on your data do:
 
-```{r, echo=FALSE, results='hide'}
-    permutationTestsResults <- OmicsON::makePermutationTestOnCCA(
-        XDataFrame = XDF, 
-        YDataFrame = YDF, 17, 2, 50, 
-        countedCCA = ccaResults1)
-```
 
-To take data from grouped CCA you should know a little the structure, it is like that:
-```{r, echo=FALSE, results='hide'}
-mccReactome$Molecules[1]
-mccReactome$right[[1]]
-mccReactome$left[[1]]
-mccReactome$ccaResults[[1]]
-mccReactome$ccaPermutationTestResults[[1]]
-```
-
-```{r, fig.show='hold', fig.width=6, fig.height=6}
-    OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = mccReactome$ccaResults[[1]])
-```
 #### PLS - Partial Least Squares Regression
 
+
+Calculate PLS on data decorated by String DB:
+
 ```{r, echo=FALSE, results='hide'}
-    PLSResult1 <- OmicsON::makePartialLeastSquaresRegression(
-        joinRecatomeTrans,
-        joinLip,
-        XDataFrame = XDF,
-        YDataFrame = YDF)
+    PLSResults <- OmicsON::makePartialLeastSquaresRegression(
+        xNamesVector = decoratedByStringBaseOnEnsembleIds[decoratedByStringBaseOnEnsembleIds[,"root"] %in% c("CHEBI:73705"),"stringGenesSymbolsNarrow"][[1]],
+        yNamesVector = c("CHEBI:73705","CHEBI:28875"),
+        XDataFrame = transcriptomicsInputData,
+        YDataFrame = lipidomicsInputData)
+
 ```
 
+How to plot results?
+
 ```{r, fig.show='hold', fig.width=6, fig.height=6}
-    OmicsON::plotRmsepForPLS(PLSResult1$training)
+    OmicsON::plotRmsepForPLS(PLSResults)
 ```  
 
 ```{r, fig.show='hold', fig.width=6, fig.height=6}
-    OmicsON::plotRegression(PLSResult1$training, ncompValue = 10)
+    OmicsON::plotRegression(PLSResults, ncompValue = 10)
 ```
-
-The same but on groups defined by user.
-```{r, echo=TRUE, results='asis'}
-    groupPlsReactome <- OmicsON::makePLSOnGroups(
-        groupsDefinitionDF = groups, 
-        mappingDF = chebiIdsToReactomePathwaysWithRoot, 
-        groupsDataDF = YDF, 
-        mappingDataDF = XDF)
-
-```
-
-How to take counted values from results:
-```{r, echo=FALSE, results='hide'}
-groupPlsReactome$Molecules[1]
-groupPlsReactome$right[[1]]
-groupPlsReactome$left[[1]]
-groupPlsReactome$plsResults[[1]]
-groupPlsReactome$plsPermutationTestResults[[1]]
-```
-How to use it to plot:
-```{r, fig.show='hold', fig.width=6, fig.height=6, echo=TRUE}
-    OmicsON::plotRmsepForPLS(groupPlsReactome$plsResults[[1]]$training)
-```
-```{r, fig.show='hold', fig.width=6, fig.height=6, echo=TRUE}
-    OmicsON::plotRegression(groupPlsReactome$plsResults[[1]]$training, ncompValue = 10)
-```
-
 
 
