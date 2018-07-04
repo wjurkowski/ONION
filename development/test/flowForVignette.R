@@ -98,3 +98,11 @@ PLSResult1 <- OmicsON::makePartialLeastSquaresRegression(
 OmicsON::plotRmsepForPLS(PLSResult1$training)
 OmicsON::plotRegression(PLSResult1$training)
 
+
+
+
+
+install.packages("xtable")
+xtable::xtable(decoratedByReactome)
+print(decoratedByReactome)
+View(decoratedByReactome)

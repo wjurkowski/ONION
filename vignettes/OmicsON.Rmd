@@ -71,8 +71,17 @@ As soon as you set up OmincsON and input data are loaded, you are ready to decor
     dataToVignetteEvaluation <- lipidomicsInputData[lipidomicsInputData[,"ChEBI"] %in% c("CHEBI:28875","CHEBI:73705", "CHEBI:35465"),]
     decoratedByReactome <- OmicsON::decorateByReactomeData(chebiMoleculesDf = dataToVignetteEvaluation,
                                 chebiIdsColumnName = "ChEBI", organismTaxonomyId = '9606')
-    knitr::kable(decoratedByReactome)
 ```
+
+```{r, echo=TRUE, results='hide'}
+    decoratedByReactome
+```
+
+
+         root  ontologyId  ensembleIds   uniProtIds  reactomeIds genesSymbolsFromEnsemble genesSymbolsFromUniProt
+1 CHEBI:28875 CHEBI:28875 ENSG0000.... Q02083, .... R-HSA-11....             NAAA, PA....            NAAA, GN....
+2 CHEBI:73705 CHEBI:46761 ENSG0000.... P46059, .... R-HSA-427975             SLC15A1,....            SLC15A1,....
+3 CHEBI:35465                                                                                                    
 
 
 What algorithm is behind the ontologies mapping? The first two columns of result table represent mapping of all small molecules to respective parents and children of ChEBI ontology: "root" denotes source IDs; if ID already exists in Reactome ontologyId column has the same value, if not but there is an alternative in the form of child or parent in ChEBI ontology, OmicsON put its id under "ontologyId" column. If we can not find root id and can not find any parent or children for it, OmicsON leave it empty.
@@ -106,17 +115,35 @@ Data frame returned from this method introduces three new columns. Them are, res
 - stringGenesSymbolsNarrow - List including vector of intersection of all neighbours per id from set of ids used in search.
 
 Full data frame resulted from decoration by String DB.
-```{r, echo=FALSE, results='asis'}
-    knitr::kable(decoratedByStringBaseOnEnsembleIds)
+
+```{r, echo=TRUE, results='hide'}
+    decoratedByReactome
 ```
 
+         root  ontologyId  ensembleIds    stringIds stringGenesSymbolsExpand stringGenesSymbolsNarrow
+1 CHEBI:28875 CHEBI:28875 ENSG0000.... 9606.ENS....             RALA, CX....             RALA, AC....
+2 CHEBI:73705 CHEBI:46761 ENSG0000.... 9606.ENS....             SLC7A2, ....             SLC7A2, ....
+3 CHEBI:35465                                                                                        
+
+
 How to traverse through data in presented data frames? I will present it on example. Moste importan is to understand that many cells include list of vectors! Example will show also what mapping to Ensemble can give different results than mapping to UniProt:
-```{r, echo=FALSE, results='asis'}
+
+```{r, echo=TRUE, results='asis'}
     decoratedByStringBaseOnEnsembleIds[1, "root"]
+```
+```{r, echo=TRUE, results='asis'}
     decoratedByStringBaseOnEnsembleIds[1, "ensembleIds"][[1]]
+```
+```{r, echo=TRUE, results='asis'}
     decoratedByStringBaseOnEnsembleIds[1, "stringGenesSymbolsNarrow"][[1]]
+```
+```{r, echo=TRUE, results='asis'}
     decoratedByStringBaseOnUniProtIds[1, "root"]
+```
+```{r, echo=TRUE, results='asis'}
     decoratedByStringBaseOnUniProtIds[1, "uniProtIds"][[1]]
+```
+```{r, echo=TRUE, results='asis'}
     decoratedByStringBaseOnUniProtIds[1, "stringGenesSymbolsNarrow"][[1]]
 ```
 
